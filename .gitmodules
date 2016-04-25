@@ -1,0 +1,3 @@
+[submodule "python-youtubechat"]
+	path = python-youtubechat
+	url = https://github.com/shughes-uk/python-youtubechat.git

@@ -1,0 +1,10 @@
+*.pyc
+tmp
+tmp/*
+logs.txt
+pyoutubechat
+python-youtubechat
+oauth_creds
+venv/
+twitchtube/twitch/twitchConfig.py
+*.json
