@@ -8,6 +8,7 @@ import signal
 # dname = os.path.dirname(abspath)
 # os.chdir(dname)
 workingDirectory = os.getcwd();
+queueName = 'twitchtubebots'
 
 def getPidForBot(botId):
     pid = None
@@ -34,7 +35,7 @@ def stopBot(pid, filename, botId):
     print ("stoping %s" % botId)
 
 def applyActionToBot(botId, action, pid):
-    startScript = "nohup python init.py --botId={BotId} > ../logs.txt &"
+    startScript = "python init.py --botId={BotId} > tmp/logs-{BotId}.txt 2>&1 &"
     filename = "tmp/" + botId + ".txt"
 
     botStartScript = startScript.replace("{BotId}", str(botId))
@@ -81,9 +82,9 @@ def callback(ch, method, properties, body):
 connection = pika.BlockingConnection(pika.ConnectionParameters(
         host='localhost'))
 channel = connection.channel()
-channel.queue_declare(queue='twitchtubebots-dev')
+channel.queue_declare(queue=queueName)
 channel.basic_consume(callback,
-                      queue='twitchtubebots-dev',
+                      queue=queueName,
                       no_ack=True)
 
 print(' [*] Waiting for messages. To exit press CTRL+C')
