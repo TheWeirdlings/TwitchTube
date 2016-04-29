@@ -10,7 +10,8 @@ reload(sys)  # Reload does the trick!
 sys.setdefaultencoding('UTF8')
 
 client = MongoClient('mongodb://localhost:27017/')
-db = client.twitchtube
+import config
+db = client[config.database]
 mongoYTChat = db.youtubeMessages
 
 class TwitchMessageFromYouTube(object):

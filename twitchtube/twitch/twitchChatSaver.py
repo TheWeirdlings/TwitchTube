@@ -9,7 +9,8 @@ from bson.objectid import ObjectId
 import datetime
 
 client = MongoClient('mongodb://localhost:27017/')
-db = client.twitchtube
+import config
+db = client[config.database]
 bots = db.twitchtubeBots
 mongoChat = db.twitchMessages
 mongoCommands = db.commands
@@ -72,7 +73,6 @@ class TwitchChatSaver(object):
 
     def checkForCommands(self, line, username):
         self.commands = mongoCommands.find({"botId": str(ObjectId(self.bot['_id'])) })
-
         for command in self.commands:
             if (command['command'] in line):
                 self.sendTwitchMessge(command['message'])

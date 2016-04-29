@@ -1,7 +1,8 @@
 from time import sleep
 from pymongo import MongoClient
 client = MongoClient('mongodb://localhost:27017/')
-db = client.twitchtube
+import config
+db = client[config.database]
 mongoChat = db.twitchMessages
 from bson.objectid import ObjectId
 import datetime

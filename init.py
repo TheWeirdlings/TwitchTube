@@ -11,6 +11,7 @@ import sys
 # sys.setdefaultencoding('UTF8')
 
 #localfiles
+import config
 from twitchtube.twitch import twitchConfig
 from twitchtube.twitch.twitchChatSaver import TwitchChatSaver
 from twitchtube.twitch.youtubeToTwitch import YouTubeToTwitch
@@ -67,40 +68,43 @@ def get_authenticated_service(args):
 
 def startUp(bot, youtube, youtube2):
     #We will share a Twitch socket. But, we still need two programs
-    socketToPass = socket.socket()
-    socketToPass.connect((twitchConfig.HOST, twitchConfig.PORT))
-    socketToPass.send("PASS " + twitchConfig.PASS + "\r\n")
-    socketToPass.send("NICK " + twitchConfig.NICK + "\r\n")
-    socketToPass.send("JOIN #" + bot['twitch'] + " \r\n")
+    if ('twitch' in bot) and (bot['twitch'] is not None):
+        socketToPass = socket.socket()
+        socketToPass.connect((twitchConfig.HOST, twitchConfig.PORT))
+        socketToPass.send("PASS " + twitchConfig.PASS + "\r\n")
+        socketToPass.send("NICK " + twitchConfig.NICK + "\r\n")
+        socketToPass.send("JOIN #" + bot['twitch'] + " \r\n")
 
     run_event = threading.Event()
     run_event.set()
 
     threads = []
 
-    ts = TwitchChatSaver(socketToPass, bot)
-    thread = threading.Thread(target=ts.start, args=(run_event,))
-    thread.daemon = True
-    thread.start()
-    threads.append(thread)
+    if ('twitch' in bot) and (bot['twitch'] is not None):
+        ts = TwitchChatSaver(socketToPass, bot)
+        thread = threading.Thread(target=ts.start, args=(run_event,))
+        thread.daemon = True
+        thread.start()
+        threads.append(thread)
 
-    tubeToTwitch = YouTubeToTwitch(socketToPass,run_event,bot)
-    thread = threading.Thread(target=tubeToTwitch.sendYoutubeChatToTwitch, args=())
-    thread.daemon = True
-    thread.start()
-    threads.append(thread)
+        tubeToTwitch = YouTubeToTwitch(socketToPass,run_event,bot)
+        thread = threading.Thread(target=tubeToTwitch.sendYoutubeChatToTwitch, args=())
+        thread.daemon = True
+        thread.start()
+        threads.append(thread)
 
-    twitchToYoutube = TwitchToYouTube(bot, youtube)
-    thread = threading.Thread(target=twitchToYoutube.run, args=(run_event,))
-    thread.daemon = True
-    thread.start()
-    threads.append(thread)
+    if ('youtube' in bot) and (bot['youtube'] is not None):
+        twitchToYoutube = TwitchToYouTube(bot, youtube)
+        thread = threading.Thread(target=twitchToYoutube.run, args=(run_event,))
+        thread.daemon = True
+        thread.start()
+        threads.append(thread)
 
-    ytcs = YouTubeChatSaver(bot, youtube2)
-    thread = threading.Thread(target=ytcs.run, args=(run_event,))
-    thread.daemon = True
-    thread.start()
-    threads.append(thread)
+        ytcs = YouTubeChatSaver(bot, youtube2)
+        thread = threading.Thread(target=ytcs.run, args=(run_event,))
+        thread.daemon = True
+        thread.start()
+        threads.append(thread)
 
     try:
         while 1:
@@ -118,7 +122,7 @@ def checkProcessFile():
     youtube2 = get_authenticated_service(args)
 
     client = MongoClient('mongodb://localhost:27017/')
-    db = client.twitchtube
+    db = client[config.database]
 
     bot = db.twitchtubeBots.find_one({ '_id': ObjectId(args.botId)})
 
@@ -132,6 +136,7 @@ def checkProcessFile():
     else:
         file(pidfile, 'w').write(pid + "\n\r")
 
+    db.twitchtubeBots.update({ '_id': ObjectId(args.botId)}, {'$set': {'status': "running"}});
     startUp(bot, youtube, youtube2)
 
 # if __name__ == "__main__":

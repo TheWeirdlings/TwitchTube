@@ -1,6 +1,7 @@
 from pymongo import MongoClient
 from time import sleep
 
+import config
 from youtubelivestreaming import live_messages
 from twitch_message_from_youtube import TwitchMessageFromYouTube
 from twitchtube.twitch.twitchChatSaver import YouTubeMessageFromTwitch
@@ -12,7 +13,7 @@ class YouTubeChatSaver(object):
         self.youtubeAuth = youtubeAuth
 
         client = MongoClient('mongodb://localhost:27017/')
-        db = client.twitchtube
+        db = client[config.database]
         self.mongoCommands = db.commands
         self.mongoYTChat = db.youtubeMessages
         self.mongoTwitchChat = db.twitchMessages
