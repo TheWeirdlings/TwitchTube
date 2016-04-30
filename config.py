@@ -1,1 +1,1 @@
-database = 'twitchtube-dev'
+database = 'twitchtube'

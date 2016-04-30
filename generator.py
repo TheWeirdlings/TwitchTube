@@ -8,7 +8,7 @@ availableItems = ['bot', 'user', 'chat', 'command', 'timer']
 client = MongoClient('mongodb://localhost:27017/')
 db = client.twitchtube
 
-from init import get_authenticated_service
+from helpers import get_authenticated_service
 from youtubelivestreaming.live_broadcasts import get_live_broadcasts
 
 from oauth2client.tools import argparser, run_flow

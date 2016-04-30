@@ -24,19 +24,33 @@ Configure
 1. ./scripts/config.sh
 2. pip install -r requirements.txt
 
+Connect Youtube
+---------------------
+1. Go to https://console.developers.google.com
+2. Create a new project or use an existing
+3. Search for YouTube Data API v3 and enable the api
+4. Select Credentials on the left hand side
+5. Click create credentials, then click OAuth
+6. Under application type select Other, then click create
+7. Download the Json file, and rename the file to client_secrets.json
+8. Copy the client_secrets.json to the root directory of twitchtube
+9. Now, when you first run init.py or generator.py you will need to add the --noauth_local_webserver flag.     Examples are below
+
 Connect Twitch
 ---------------------
 1. Copy twitchtube/twitch/twitchConfig-example.py to twitchtube/twitch/twitchConfig.py
-2. Get an OAuth password from (https://www.twitch.tv/settings/connections). Register an app at the bottom
+2. Get an OAuth password from (http://www.twitchapps.com/tmi/). Use the NICK that you register
 3. Fill out the twitch config with your developer information.
 
 Add a bot to your mongo database
 ---------------------
 1. Start mongo with the mongod command
-2. python generator.py --action=add --item=bot
+2. python generator.py --action=create --item=bot or python generator.py --action=create --item=bot --noauth_local_webserver for your first run
 3. python generator.py --action=read --item=bot
 * (Copy the bot id)
 
 Run the script
 ---------------------
-python init.py --botId=[insert-bot-id]
+python init.py --botId=[insert-bot-id] or python init.py --botId=[insert-bot-id] --noauth_local_webserver for your first run
+
+When restarting the bot, you will need to remove the pid file. Run the command rm tmp/[insert-bot-id].txt
