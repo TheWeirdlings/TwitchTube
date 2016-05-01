@@ -1,9 +1,14 @@
 import socket, string
 from time import sleep
 import datetime
+import pytz
+from dateutil import parser
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 import twitchConfig
+from TwitchPythonApi.twitch_api import TwitchApi
+import json
+import requests
 
 import sys
 reload(sys)  # Reload does the trick!
@@ -41,6 +46,12 @@ class YouTubeToTwitch(object):
         self.bot = bot
         self.setUpTimers()
 
+        self.twitchChannel = self.bot['twitch']
+        self.twitchApi = TwitchApi()
+        self.twitchFollowerCursor = None
+        self.lastMinuteCheckedForFollowers = None
+        self.lastTimeFollowerAlerted = None
+
     def setUpTimers(self):
         timers = db.timers.find({"botId": str(ObjectId(self.bot['_id'])) })
 
@@ -77,6 +88,34 @@ class YouTubeToTwitch(object):
         except UnicodeDecodeError:
             print 'Add support'
 
+    def checkForNewFollower(self):
+        now = datetime.datetime.now(pytz.UTC)
+        currentMinute = now.minute
+
+        if self.lastMinuteCheckedForFollowers is None or currentMinute != self.lastMinuteCheckedForFollowers:
+            self.lastMinuteCheckedForFollowers = currentMinute
+            followers = self.twitchApi.getFollowers(self.twitchChannel, self.twitchFollowerCursor)
+            followers = json.loads(followers)
+
+            if self.lastTimeFollowerAlerted is None:
+                if len(followers['follows']) > 0:
+                    lastFollower = followers['follows'][0]
+                    lastFollowerDate = parser.parse(lastFollower['created_at'])
+                    self.lastTimeFollowerAlerted = lastFollowerDate
+                else:
+                    self.lastTimeFollowerAlerted = now
+
+            for follower in followers['follows']:
+                followerDate = parser.parse(follower['created_at'])
+
+                if followerDate > self.lastTimeFollowerAlerted:
+                    followerDisplayName = follower['user']['display_name']
+                    self.sendTwitchMessge("%s just followed!" % followerDisplayName)
+
+                lastFollower = followers['follows'][0]
+                lastFollowerDate = parser.parse(lastFollower['created_at'])
+                self.lastTimeFollowerAlerted = lastFollowerDate
+
     def sendYoutubeChatToTwitch(self):
         while self.run_event.is_set():
             prevMessage = ""
@@ -84,6 +123,7 @@ class YouTubeToTwitch(object):
             chatToSend.getNextMessageToSend()
 
             self.sendTimers()
+            self.checkForNewFollower()
 
             if chatToSend.mongoDocument is not None:
                 if ("(From Twitch)" in chatToSend.mongoDocument['message']) or (chatToSend.mongoDocument['message'] == prevMessage):

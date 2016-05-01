@@ -1,3 +1,6 @@
 [submodule "python-youtubechat"]
 	path = python-youtubechat
 	url = https://github.com/shughes-uk/python-youtubechat.git
+[submodule "TwitchPythonApi"]
+	path = TwitchPythonApi
+	url = https://github.com/TheWeirdlings/TwitchPythonApi.git
