@@ -1,1 +1,2 @@
-database = 'twitchtube'
+database = 'twitchtubebots-dev'
+rabbitQueue = 'twitchtubebots-dev'

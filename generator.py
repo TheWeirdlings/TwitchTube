@@ -5,8 +5,9 @@ from bson.objectid import ObjectId
 availableActions = ['create', 'read', 'update', 'delete']
 availableItems = ['bot', 'user', 'chat', 'command', 'timer']
 
+import config
 client = MongoClient('mongodb://localhost:27017/')
-db = client.twitchtube
+db = client[config.database]
 
 from helpers import get_authenticated_service
 from youtubelivestreaming.live_broadcasts import get_live_broadcasts

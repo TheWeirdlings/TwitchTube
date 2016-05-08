@@ -8,7 +8,9 @@ import signal
 # dname = os.path.dirname(abspath)
 # os.chdir(dname)
 workingDirectory = os.getcwd();
-queueName = 'twitchtubebots'
+
+import config
+queueName = config.rabbitQueue
 
 def getPidForBot(botId):
     pid = None

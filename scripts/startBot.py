@@ -2,8 +2,10 @@ import json
 import os
 import signal
 from pymongo import MongoClient
+
+import config
 client = MongoClient('mongodb://localhost:27017/')
-db = client.twitchtube
+db = client[config.database]
 bots = db.twitchtubeBots
 
 startScript = "nohup python ../bot2.py {BotId} > ../logs.txt &"
