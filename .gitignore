@@ -8,3 +8,4 @@ oauth_creds
 venv/
 twitchtube/twitch/twitchConfig.py
 *.json
+config.py
