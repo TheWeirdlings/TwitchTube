@@ -110,7 +110,11 @@ class YouTubeToTwitch(object):
 
                 if followerDate > self.lastTimeFollowerAlerted:
                     followerDisplayName = follower['user']['display_name']
-                    self.sendTwitchMessge("%s just followed!" % followerDisplayName)
+
+                    newFollerMessage = self.bot['twitchOptions']['twitchAlertText']
+                    newFollerMessage = newFollerMessage.replace("{{userId}}", followerDisplayName)
+
+                    self.sendTwitchMessge(newFollerMessage)
 
                 lastFollower = followers['follows'][0]
                 lastFollowerDate = parser.parse(lastFollower['created_at'])
@@ -123,7 +127,9 @@ class YouTubeToTwitch(object):
             chatToSend.getNextMessageToSend()
 
             self.sendTimers()
-            self.checkForNewFollower()
+
+            if 'twitchOptions' in self.bot and self.bot['twitchOptions']['displayTwitchAlerts'] == True:
+                self.checkForNewFollower()
 
             if chatToSend.mongoDocument is not None:
                 if ("(From Twitch)" in chatToSend.mongoDocument['message']) or (chatToSend.mongoDocument['message'] == prevMessage):
