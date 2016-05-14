@@ -1,3 +1,4 @@
+import sys
 from time import sleep
 from pymongo import MongoClient
 client = MongoClient('mongodb://localhost:27017/')
@@ -23,7 +24,11 @@ class TwitchToYouTube(object):
         chatToSend = self.ytChatModel.mongoDocument
         if chatToSend is not None:
             self.ytChatModel.markSent()
-            live_messages.insert_message(self.youtubeAuth, self.livechat_id, chatToSend['message'])
+            try:
+                live_messages.insert_message(self.youtubeAuth, self.livechat_id, chatToSend['message'])
+            except:
+                e = sys.exc_info()[0]
+                print "Error: %s" % e 
 
     def setUpTimers(self):
         timers = db.timers.find({"botId": str(ObjectId(self.botId))})
