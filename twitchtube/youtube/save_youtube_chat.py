@@ -8,6 +8,8 @@ from twitchtube.twitch.twitchChatSaver import YouTubeMessageFromTwitch
 
 import json
 
+twitchFromPrefix = "(From Twitch)"
+
 class YouTubeChatSaver(object):
     def __init__(self, bot, youtubeAuth):
         self.youtubeAuth = youtubeAuth
@@ -26,7 +28,7 @@ class YouTubeChatSaver(object):
     def applyCommands(self, message):
         self.commands = self.mongoCommands.find({"botId": str(self.botId)})
         for command in self.commands:
-            if (command['command'] in message['snippet']['displayMessage']):
+            if (command['command'] in message['snippet']['displayMessage'] and twitchFromPrefix not in message['snippet']['displayMessage']):
                 #WE can send on the same thread as we are polling chat, so let's just queue this message up
                 youtubeMessage = YouTubeMessageFromTwitch("", command['message'], False)
                 self.mongoTwitchChat.insert(youtubeMessage.toMongoObject(self.bot))

@@ -15,6 +15,9 @@ bots = db.twitchtubeBots
 mongoChat = db.twitchMessages
 mongoCommands = db.commands
 
+twitchFromPrefix = "(From Twitch)"
+youtubeFromPrefix = "(From YouTube)"
+
 class MLStripper(HTMLParser):
     def __init__(self):
         self.reset()
@@ -33,7 +36,7 @@ class YouTubeMessageFromTwitch(object):
     def __init__(self, author, text, addFromTwitch = True):
         message = ""
         if (addFromTwitch):
-            message = "(From Twitch) "
+            message = twitchFromPrefix + " "
 
         if (author):
             message = message + author + ": "
@@ -74,7 +77,7 @@ class TwitchChatSaver(object):
     def checkForCommands(self, line, username):
         self.commands = mongoCommands.find({"botId": str(ObjectId(self.bot['_id'])) })
         for command in self.commands:
-            if (command['command'] in line):
+            if (command['command'] in line and youtubeFromPrefix not in line):
                 self.sendTwitchMessge(command['message'])
 
         if "!restart" in line:
