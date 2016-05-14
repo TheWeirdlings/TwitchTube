@@ -39,6 +39,10 @@ class YouTubeChatSaver(object):
         #bulkop = self.mongoYTChat.initialize_ordered_bulk_op()
 
         for message in messages:
+            #Don't save chat sent from the bot - these are commands and timers
+            if (message['authorDetails']['displayName'] == 'Twitchtube'):
+                continue
+
             messageToSave = TwitchMessageFromYouTube(message['authorDetails']['displayName'], message['snippet']['displayMessage'], message['id'], self.botId)
             mongoMessagesToSaveToMongo.append(messageToSave.toMongoObject())
 
