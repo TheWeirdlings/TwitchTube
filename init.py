@@ -8,6 +8,7 @@ import os
 import sys
 import httplib2
 from oauth2client.tools import argparser, run_flow
+import logging
 
 # reload(sys)
 # sys.setdefaultencoding('UTF8')
@@ -71,6 +72,9 @@ def startUp(bot, youtube, youtube2):
     except KeyboardInterrupt:
         run_event.clear()
 
+def uncaught_exception_handler(type, value, tb):
+    logger.exception("Uncaught exception: {0}".format(str(value)))
+
 def checkProcessFile():
     #TODO: This was the Google way of getting the arguments..
     argparser.add_argument('--botId', help='Bot ID')
@@ -87,6 +91,14 @@ def checkProcessFile():
     #Create a lock for this chat
     pid = str(os.getpid())
     pidfile = "tmp/" + str(bot['_id']) + ".txt"
+
+    #Set up logging
+    logfile = "tmp/" + str(bot['_id']) + "-logfile.txt"
+    logging.basicConfig(filename=logfile, level=logging.DEBUG)
+    logging.debug('Log file is good.')
+
+    # Install exception handler
+    sys.excepthook = uncaught_exception_handler
 
     if os.path.isfile(pidfile):
         print "%s already exists, exiting" % pidfile
