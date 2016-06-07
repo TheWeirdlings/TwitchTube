@@ -74,19 +74,11 @@ class TwitchChatSaver(object):
         except UnicodeDecodeError:
             print 'Add support'
 
-    def checkForCommands(self, line, username):
+    def checkForCommands(self, message, username):
         self.commands = mongoCommands.find({"botId": str(ObjectId(self.bot['_id'])) })
         for command in self.commands:
-            if (command['command'] in line and youtubeFromPrefix not in line):
+            if (command['command'] == message and youtubeFromPrefix not in message):
                 self.sendTwitchMessge(command['message'])
-
-        if "!restart" in line:
-            bots.update({'_id': self.bot['_id']}, {'$set': {'status': 'restart'}})
-            self.sendTwitchMessge('Restarting...')
-
-        # if "!stop" in line:
-        #     bots.update({'_id': self.bot['_id']}, {'$set': {'status': 'stop'}})
-        #     self.sendTwitchMessge('stoping..')
 
     def parseLine(self, line):
         youtubeMessage = ""
@@ -113,11 +105,10 @@ class TwitchChatSaver(object):
                     if ("(From YouTube)" in line or len(message) > 200 or len(message) < 1):
                         print "Skip chat"
                     else:
-                        self.checkForCommands(line, username)
-
                         message = strip_tags(message)
                         message = cgi.escape(message)
                         if message:
+                            self.checkForCommands(message, username)
                             youtubeMessage = YouTubeMessageFromTwitch(username, message)
                             self.twitchMessagesToSave.append(youtubeMessage.toMongoObject(self.bot))
 
