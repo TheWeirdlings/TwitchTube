@@ -73,7 +73,7 @@ def startUp(bot, youtube, youtube2):
         run_event.clear()
 
 def uncaught_exception_handler(type, value, tb):
-    logger.exception("Uncaught exception: {0}".format(str(value)))
+    logging.exception("Uncaught exception: {0}".format(str(value)))
 
 def checkProcessFile():
     #TODO: This was the Google way of getting the arguments..

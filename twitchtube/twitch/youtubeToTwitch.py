@@ -5,10 +5,12 @@ import pytz
 from dateutil import parser
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-import twitchConfig
-from TwitchPythonApi.twitch_api import TwitchApi
 import json
 import requests
+
+import twitchConfig
+from TwitchPythonApi.twitch_api import TwitchApi
+from userActionsManager import UserActionsManager
 
 import sys
 reload(sys)  # Reload does the trick!
@@ -40,6 +42,8 @@ class TwitchMessageFromYouTube(object):
 
 class YouTubeToTwitch(object):
     def __init__(self, inSocket, run_event, bot):
+        self.subscribers = []
+
         self.CHANNEL = '#' + bot['twitch']
         self.s = inSocket
         self.run_event = run_event
@@ -51,6 +55,17 @@ class YouTubeToTwitch(object):
         self.twitchFollowerCursor = None
         self.lastMinuteCheckedForFollowers = None
         self.lastTimeFollowerAlerted = None
+
+        #Subscribers should register outside of this scope
+        self.usersActionsManager = UserActionsManager(self.s, self.bot)
+        self.register(self.usersActionsManager)
+
+    def register(self, subscriber):
+        self.subscribers.append(subscriber)
+
+    def notifySubscribers(self):
+        for subscriber in self.subscribers:
+            subscriber.exectute()
 
     def setUpTimers(self):
         timers = db.timers.find({"botId": str(ObjectId(self.bot['_id'])) })
@@ -130,6 +145,8 @@ class YouTubeToTwitch(object):
 
             if 'twitchOptions' in self.bot and self.bot['twitchOptions']['displayTwitchAlerts'] == True:
                 self.checkForNewFollower()
+
+            self.notifySubscribers()
 
             if chatToSend.mongoDocument is not None:
                 if ("(From Twitch)" in chatToSend.mongoDocument['message']) or (chatToSend.mongoDocument['message'] == prevMessage):
