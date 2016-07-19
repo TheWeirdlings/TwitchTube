@@ -20,3 +20,15 @@ def get_live_broadcasts(youtube, broadcast_status="all"):
     #
     #       list_broadcasts_request = youtube.liveBroadcasts().list_next(
     #         list_broadcasts_request, list_broadcasts_response)
+
+def get_live_broadcasts_list(youtube, broadcast_status="all"):
+    list_broadcasts_request = youtube.liveBroadcasts().list(
+        # broadcastStatus="all",
+        broadcastType="persistent",
+        part="snippet,id",
+        maxResults=1,
+        mine=True,
+    )
+    list_broadcasts_response = list_broadcasts_request.execute()
+    casts = list_broadcasts_response.get("items", [])
+    return casts;

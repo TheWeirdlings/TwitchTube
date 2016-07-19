@@ -26,7 +26,12 @@ class TwitchMessageFromYouTube(object):
         self.bot = bot
 
     def getNextMessageToSend(self):
-        self.mongoDocument = mongoYTChat.find_one({"sent": False, "bot_id": self.bot['_id']})
+        self.mongoDocument = mongoYTChat.find_one({
+            "sent": False, "bot_id": self.bot['_id'],
+            "date": {
+                "$gt": datetime.datetime.now() - datetime.timedelta(minutes=3)
+            },
+        })
 
     def markSent(self):
         result = mongoYTChat.update_one(

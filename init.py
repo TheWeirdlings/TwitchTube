@@ -18,8 +18,11 @@ import config
 from twitchtube.twitch import twitchConfig
 from twitchtube.twitch.twitchChatSaver import TwitchChatSaver
 from twitchtube.twitch.youtubeToTwitch import YouTubeToTwitch
+
 from twitchtube.youtube.twitch_to_youtube import TwitchToYouTube
 from twitchtube.youtube.save_youtube_chat import YouTubeChatSaver
+from twitchtube.youtube.YoutubePointManager import YoutubePointManager
+
 from youtubelivestreaming.live_broadcasts import get_live_broadcasts
 from helpers import get_authenticated_service
 #endlocalfiles
@@ -54,6 +57,10 @@ def startUp(bot, youtube, youtube2):
 
     if ('youtube' in bot) and (bot['youtube'] is not None):
         twitchToYoutube = TwitchToYouTube(bot, youtube)
+
+        youtubePointManager = YoutubePointManager(youtube)
+        twitchToYoutube.register(youtubePointManager)
+
         thread = threading.Thread(target=twitchToYoutube.run, args=(run_event,))
         thread.daemon = True
         thread.start()

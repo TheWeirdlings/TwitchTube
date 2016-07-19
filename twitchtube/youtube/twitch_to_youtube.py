@@ -13,11 +13,20 @@ from youtubelivestreaming import live_messages
 
 class TwitchToYouTube(object):
     def __init__(self, bot, youtubeAuth):
+        self.subscribers = []
+
         self.botId = bot['_id']
         self.ytChatModel = YouTubeMessageFromTwitch(self.botId)
         self.livechat_id = bot['youtube']
         self.youtubeAuth = youtubeAuth
         self.setUpTimers()
+
+    def register(self, subscriber):
+        self.subscribers.append(subscriber)
+
+    def notifiySubscribers(self):
+        for subscriber in self.subscribers:
+            subscriber.execute();
 
     def sendNextTwitchChatToYoutube(self):
         self.ytChatModel.getNextMessageToSend()
@@ -28,7 +37,7 @@ class TwitchToYouTube(object):
                 live_messages.insert_message(self.youtubeAuth, self.livechat_id, chatToSend['message'])
             except:
                 e = sys.exc_info()[0]
-                print "Error: %s" % e 
+                print "Error: %s" % e
 
     def setUpTimers(self):
         timers = db.timers.find({"botId": str(ObjectId(self.botId))})
@@ -63,6 +72,7 @@ class TwitchToYouTube(object):
 
     def run(self, run_event):
         while run_event.is_set():
+            self.notifiySubscribers()
             self.sendTimers()
             self.sendNextTwitchChatToYoutube()
             sleep(1)
