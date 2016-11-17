@@ -1,4 +1,3 @@
-import twitchConfig
 from HTMLParser import HTMLParser
 import cgi
 import string
@@ -8,8 +7,9 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 import datetime
 
-client = MongoClient('mongodb://localhost:27017/')
 import config
+
+client = MongoClient(config.mongoUrl)
 db = client[config.database]
 bots = db.twitchtubeBots
 mongoChat = db.twitchMessages
