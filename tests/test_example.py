@@ -1,6 +1,6 @@
 import unittest
 
-from twitchtube.twitch.twitchChatSaver import TwitchChatSaver
+from twitchtube.twitch.TwitchChatSaver import TwitchChatSaver
 
 class PrimesTestCase(unittest.TestCase):
     """Tests for `primes.py`."""

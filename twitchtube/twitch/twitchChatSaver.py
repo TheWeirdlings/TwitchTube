@@ -1,11 +1,9 @@
-from HTMLParser import HTMLParser
 import cgi
 import string
 from time import sleep
 import json
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-import datetime
 
 import config
 
@@ -15,44 +13,7 @@ bots = db.twitchtubeBots
 mongoChat = db.twitchMessages
 mongoCommands = db.commands
 
-twitchFromPrefix = "(From Twitch)"
 youtubeFromPrefix = "(From YouTube)"
-
-class MLStripper(HTMLParser):
-    def __init__(self):
-        self.reset()
-        self.fed = []
-    def handle_data(self, d):
-        self.fed.append(d)
-    def get_data(self):
-        return ''.join(self.fed)
-
-def strip_tags(html):
-    s = MLStripper()
-    s.feed(html)
-    return s.get_data()
-
-class YouTubeMessageFromTwitch(object):
-    def __init__(self, author, text, addFromTwitch = True):
-        message = ""
-        if (addFromTwitch):
-            message = twitchFromPrefix + " "
-
-        if (author):
-            message = message + author + ": "
-
-        self.message = message + text
-
-
-    def toMongoObject(self, bot):
-        # @TODO: Should we really pass the bot around this way?
-        mongoMessage = {
-            "bot_id": bot['_id'],
-            "message": self.message,
-            "sent": False,
-            "date": datetime.datetime.utcnow()
-        }
-        return mongoMessage
 
 class TwitchChatSaver(object):
 
@@ -67,6 +28,11 @@ class TwitchChatSaver(object):
         self.commands = mongoCommands.find({"botId": str(ObjectId(bot['_id'])) })
 
         self.bot = bot
+
+    def strip_tags(self, html):
+        s = MLStripper()
+        s.feed(html)
+        return s.get_data()
 
     def sendTwitchMessge(self, message):
         try:
@@ -105,7 +71,7 @@ class TwitchChatSaver(object):
                     if ("(From YouTube)" in line or len(message) > 200 or len(message) < 1):
                         print "Skip chat"
                     else:
-                        message = strip_tags(message)
+                        message = self.strip_tags(message)
                         message = cgi.escape(message)
                         if message:
                             self.checkForCommands(message, username)
