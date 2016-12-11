@@ -38,7 +38,7 @@ class TwitchChatSaver(object):
         try:
             self.s.send("PRIVMSG " + self.CHANNEL + " :" + message + "\r\n")
         except UnicodeDecodeError:
-            print 'Add support'
+            print('Add support')
 
     def checkForCommands(self, message, username):
         self.commands = mongoCommands.find({"botId": str(ObjectId(self.bot['_id'])) })
@@ -69,7 +69,7 @@ class TwitchChatSaver(object):
                     #Check if the message was transferred from Youtube.
                     # @TODO: Maybe one day we can have a more sequential syncing?
                     if ("(From YouTube)" in line or len(message) > 200 or len(message) < 1):
-                        print "Skip chat"
+                        print("Skip chat")
                     else:
                         message = self.strip_tags(message)
                         message = cgi.escape(message)

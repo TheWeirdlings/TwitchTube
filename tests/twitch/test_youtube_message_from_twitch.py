@@ -1,6 +1,6 @@
 import unittest
 
-from twitchtube.twitch.YouTubeMessageFromTwitch import YouTubeMessageFromTwitch
+from twitchtube.models.YoutubeMessageModel import YoutubeMessageModel
 
 class YouTubeMessageFromTwitchTestCase(unittest.TestCase):
     """Tests for ``."""
@@ -13,10 +13,10 @@ class YouTubeMessageFromTwitchTestCase(unittest.TestCase):
 
         bot = {'_id': testId}
 
-        youTubeMessageFromTwitch = YouTubeMessageFromTwitch(author, message)
+        youTubeMessageFromTwitch = YoutubeMessageModel(author, message)
         mongoObject = youTubeMessageFromTwitch.toMongoObject(bot)
 
-        self.assertEquals(mongoObject['bot_id'], testId)
-        self.assertEquals(mongoObject['message'], twitchFromPrefix + " " + author + ": " + message)
-        self.assertEquals(mongoObject['sent'], False)
+        self.assertEqual(mongoObject['bot_id'], testId)
+        self.assertEqual(mongoObject['message'], twitchFromPrefix + " " + author + ": " + message)
+        self.assertEqual(mongoObject['sent'], False)
         self.assertTrue(mongoObject['date'])

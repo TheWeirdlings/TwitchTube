@@ -3,7 +3,6 @@ from time import sleep
 import datetime
 import pytz
 from dateutil import parser
-from pymongo import MongoClient
 from bson.objectid import ObjectId
 import json
 import requests
@@ -15,35 +14,6 @@ from userActionsManager import UserActionsManager
 import sys
 reload(sys)  # Reload does the trick!
 sys.setdefaultencoding('UTF8')
-
-client = MongoClient('mongodb://localhost:27017/')
-import config
-db = client[config.database]
-mongoYTChat = db.youtubeMessages
-
-class TwitchMessageFromYouTube(object):
-    def __init__(self, bot):
-        self.bot = bot
-
-    def getNextMessageToSend(self):
-        self.mongoDocument = mongoYTChat.find_one({
-            "sent": False, "bot_id": self.bot['_id'],
-            "date": {
-                "$gt": datetime.datetime.now() - datetime.timedelta(minutes=3)
-            },
-        })
-
-    def markSent(self):
-        result = mongoYTChat.update_one(
-            {"_id": self.mongoDocument['_id']},
-            {
-                "$set": {
-                    "sent": True
-                },
-                "$currentDate": {"lastModified": True}
-            }
-        )
-
 
 class YouTubeToTwitch(object):
     def __init__(self, inSocket, run_event, bot):
