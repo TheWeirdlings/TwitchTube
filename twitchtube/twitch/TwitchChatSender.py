@@ -7,7 +7,6 @@ from bson.objectid import ObjectId
 import json
 import requests
 
-import twitchConfig
 from TwitchPythonApi.twitch_api import TwitchApi
 from userActionsManager import UserActionsManager
 
@@ -79,7 +78,7 @@ class TwitchChatSender(object):
         try:
             self.s.send("PRIVMSG " + self.CHANNEL + " :" + message + "\r\n")
         except UnicodeDecodeError:
-            print 'Add support'
+            print('Add support')
 
     def checkForNewFollower(self):
         now = datetime.datetime.now(pytz.UTC)
