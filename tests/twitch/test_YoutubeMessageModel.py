@@ -2,7 +2,7 @@ import unittest
 
 from twitchtube.models.YoutubeMessageModel import YoutubeMessageModel
 
-class YouTubeMessageFromTwitchTestCase(unittest.TestCase):
+class YoutubeMessageModelTestCase(unittest.TestCase):
     """Tests for ``."""
 
     def test_toMongoObject(self):
