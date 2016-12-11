@@ -20,7 +20,7 @@ class YouTubeMessageModelTestCase(unittest.TestCase):
         self.bot = {'_id': testId}
 
     def tearDown(self):
-        mongoYTChat.remove({})
+        mongoYTChat.delete_many({})
 
     def createYoutubeMessage(self):
         # set up collection
@@ -47,3 +47,23 @@ class YouTubeMessageModelTestCase(unittest.TestCase):
 
         # test that it exists
         self.assertTrue(getNextMessageToSend)
+
+    def test_markSent(self):
+        # create a message that is ready to send
+        self.createYoutubeMessage()
+
+        # use the collection to get the message
+        youtubeMessageCollection = YoutubeMessageCollection(self.bot);
+        getNextMessageToSend = youtubeMessageCollection.getNextMessageToSend()
+
+        # test that it exists
+        self.assertTrue(getNextMessageToSend)
+
+        # mark the message as sent
+        youtubeMessageCollection.markSent()
+
+        # test try to get the message again
+        getNextMessageToSendAgain = youtubeMessageCollection.getNextMessageToSend()
+
+        # test it does not exist
+        self.assertFalse(getNextMessageToSendAgain)

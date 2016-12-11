@@ -21,6 +21,7 @@ class YoutubeMessageCollection(object):
         })
         return self.mongoDocument
 
+    # @TODO: This should not handle one at a time or this should be move to a single model
     def markSent(self):
         result = mongoYTChat.update_one(
             {"_id": self.mongoDocument['_id']},
