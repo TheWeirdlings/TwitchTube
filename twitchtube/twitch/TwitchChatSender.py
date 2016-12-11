@@ -15,7 +15,10 @@ import sys
 reload(sys)  # Reload does the trick!
 sys.setdefaultencoding('UTF8')
 
-class YouTubeToTwitch(object):
+#   This class grabs and chats that are queued for twitch and send them to the twitch channel associated with the bot
+#   This is a worker that listens to a queue
+
+class TwitchChatSender(object):
     def __init__(self, inSocket, run_event, bot):
         self.subscribers = []
 

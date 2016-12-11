@@ -10,7 +10,7 @@ client = MongoClient(config.mongoUrl)
 db = client[config.database]
 mongoYTChat = db.youtubeMessages
 
-class YouTubeMessageModelTestCase(unittest.TestCase):
+class YoutubeMessageCollectionTestCase(unittest.TestCase):
     """Tests for ``."""
 
     def setUp(self):
