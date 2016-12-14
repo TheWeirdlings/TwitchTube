@@ -1,22 +1,17 @@
-import socket, string
 from time import sleep
 import datetime
 import pytz
 from dateutil import parser
 from bson.objectid import ObjectId
 import json
-import requests
 
 from TwitchPythonApi.twitch_api import TwitchApi
-from userActionsManager import UserActionsManager
+from twitchtube.models.TwitchMessageCollection import TwitchMessageCollection
 
-import sys
-reload(sys)  # Reload does the trick!
-sys.setdefaultencoding('UTF8')
+# from userActionsManager import UserActionsManager
 
 #   This class grabs and chats that are queued for twitch and send them to the twitch channel associated with the bot
 #   This is a worker that listens to a queue
-
 class TwitchChatSender(object):
     def __init__(self, inSocket, run_event, bot):
         self.subscribers = []
@@ -25,7 +20,7 @@ class TwitchChatSender(object):
         self.s = inSocket
         self.run_event = run_event
         self.bot = bot
-        self.setUpTimers()
+        # self.setUpTimers()
 
         self.twitchChannel = self.bot['twitch']
         self.twitchApi = TwitchApi()
@@ -34,8 +29,8 @@ class TwitchChatSender(object):
         self.lastTimeFollowerAlerted = None
 
         #Subscribers should register outside of this scope
-        self.usersActionsManager = UserActionsManager(self.s, self.bot)
-        self.register(self.usersActionsManager)
+        # self.usersActionsManager = UserActionsManager(self.s, self.bot)
+        # self.register(self.usersActionsManager)
 
     def register(self, subscriber):
         self.subscribers.append(subscriber)
@@ -112,25 +107,26 @@ class TwitchChatSender(object):
                 lastFollowerDate = parser.parse(lastFollower['created_at'])
                 self.lastTimeFollowerAlerted = lastFollowerDate
 
-    def sendYoutubeChatToTwitch(self):
+    def sendMessageFromQueue(self):
+        twitchCollection = TwitchMessageCollection(self.bot)
+        chatToSend = twitchCollection.getNextMessageToSend()
+
+        # self.sendTimers()
+
+        # if 'twitchOptions' in self.bot and self.bot['twitchOptions']['displayTwitchAlerts'] == True:
+        #     self.checkForNewFollower()
+        #
+        # self.notifySubscribers()
+
+        if chatToSend is None:
+            return
+
+        self.sendTwitchMessge(chatToSend['message'])
+        # TODO: chatToSend should be a twitch chat model and that should mark itself as sent??
+        twitchCollection.markSent();
+
+
+    def work(self):
         while self.run_event.is_set():
-            prevMessage = ""
-            chatToSend = TwitchMessageFromYouTube(self.bot)
-            chatToSend.getNextMessageToSend()
-
-            self.sendTimers()
-
-            if 'twitchOptions' in self.bot and self.bot['twitchOptions']['displayTwitchAlerts'] == True:
-                self.checkForNewFollower()
-
-            self.notifySubscribers()
-
-            if chatToSend.mongoDocument is not None:
-                if ("(From Twitch)" in chatToSend.mongoDocument['message']) or (chatToSend.mongoDocument['message'] == prevMessage):
-                    chatToSend.markSent();
-                    prevMessage = ""
-                else:
-                    prevMessage = chatToSend.mongoDocument['message']
-                    self.sendTwitchMessge(chatToSend.mongoDocument['message'])
-                    chatToSend.markSent();
+            self.sendMessageFromQueue()
             sleep(1.5)
