@@ -11,7 +11,7 @@ import datetime
 from youtube_message_from_twitch import YouTubeMessageFromTwitch
 from youtubelivestreaming import live_messages
 
-class TwitchToYouTube(object):
+class YoutubeChatSender(object):
     def __init__(self, bot, youtubeAuth):
         self.subscribers = []
 
