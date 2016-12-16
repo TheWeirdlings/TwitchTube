@@ -6,7 +6,7 @@ availableActions = ['create', 'read', 'update', 'delete']
 availableItems = ['bot', 'user', 'chat', 'command', 'timer']
 
 import config
-client = MongoClient('mongodb://localhost:27017/')
+client = MongoClient(config.mongoUrl)
 db = client[config.database]
 
 from helpers import get_authenticated_service
@@ -62,36 +62,37 @@ if __name__ == "__main__":
     if item not in availableItems:
          raise Exception('Item is not available. Try:')#implode?
 
-    print "\n"
+    print("\n")
 
     if action == "read":
         if item == "bot":
             bots = db.twitchtubeBots.find()
             for bot in bots:
-                for key, value in bot.iteritems() :
-                    print key, value
-                print "\n"
+                print(bot)
+                for key, value in bot.items() :
+                    print(key, value)
+                print("\n")
         elif item == "command":
             commands = db.commands.find()
             for command in commands:
-                for key, value in command.iteritems() :
-                    print key, value
-                print "\n"
+                for key, value in command.items() :
+                    print(key, value)
+                print("\n")
 
     elif action == "create":
         if item == "bot":
             youtube = get_authenticated_service(args)
             youTubeLiveChatId = get_live_broadcasts(youtube)
-            botAlias = raw_input('Enter the name of your bot: ')
-            twitch = raw_input('Enter the Twitch Channel: ')
+            botAlias = input('Enter the name of your bot: ')
+            twitch = input('Enter the Twitch Channel: ')
 
             tb = TwitchtubeBot(botAlias, twitch, youTubeLiveChatId);
             db.twitchtubeBots.insert(tb.toMongoObject())
 
         elif item == "command":
-            botId = raw_input('Enter the bot id for the command: ')
-            command = raw_input('Enter the command (ex: !testingstuffs): ')
-            message = raw_input('What message will be displayed after the command?: ')
+            botId = input('Enter the bot id for the command: ')
+            command = input('Enter the command (ex: !testingstuffs): ')
+            message = input('What message will be displayed after the command?: ')
 
             commandDoc = Command(botId, command, message);
             db.commands.insert(commandDoc.toMongoObject())
