@@ -3,8 +3,8 @@ import string
 from pymongo import MongoClient
 import datetime
 
-client = MongoClient('mongodb://localhost:27017/')
 import config
+client = MongoClient(config.mongoUrl)
 db = client[config.database]
 mongoTwitchUsers = db.youtubeViewers
 
@@ -18,9 +18,9 @@ class YoutubePointManager(object):
 
     #@TODO: Move to Youtube api
     def getYoutubeStats(self):
-        print get_live_broadcasts_list(self.youtubeApi)
+        print(get_live_broadcasts_list(self.youtubeApi))
         r = requests.get('https://www.youtube.com/live_stats?v=c6kZb-K6IvpohIyIbL-VQA1441139657488068')
-        print r.json();
+        print(r.json())
 
     def execute(self):
         now = datetime.datetime.now()

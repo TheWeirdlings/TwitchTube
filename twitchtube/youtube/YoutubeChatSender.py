@@ -8,7 +8,7 @@ mongoChat = db.twitchMessages
 from bson.objectid import ObjectId
 import datetime
 
-from youtube_message_from_twitch import YouTubeMessageFromTwitch
+from twitchtube.models.YoutubeMessageModel import YoutubeMessageModel
 from youtubelivestreaming import live_messages
 
 class YoutubeChatSender(object):
@@ -16,7 +16,7 @@ class YoutubeChatSender(object):
         self.subscribers = []
 
         self.botId = bot['_id']
-        self.ytChatModel = YouTubeMessageFromTwitch(self.botId)
+        self.ytChatModel = YoutubeMessageModel(self.botId)
         self.livechat_id = bot['youtube']
         self.youtubeAuth = youtubeAuth
         self.setUpTimers()
@@ -37,7 +37,7 @@ class YoutubeChatSender(object):
                 live_messages.insert_message(self.youtubeAuth, self.livechat_id, chatToSend['message'])
             except:
                 e = sys.exc_info()[0]
-                print "Error: %s" % e
+                print("Error: %s" % e)
 
     def setUpTimers(self):
         timers = db.timers.find({"botId": str(ObjectId(self.botId))})

@@ -1,26 +1,20 @@
-import socket, string
+import socket
 from time import sleep
-import datetime
 import threading
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 import os
 import sys
-import httplib2
-from oauth2client.tools import argparser, run_flow
+from oauth2client.tools import argparser
 import logging
-
-# reload(sys)
-# sys.setdefaultencoding('UTF8')
 
 #localfiles
 import config
-from twitchtube.twitch import twitchConfig
-from twitchtube.twitch.twitchChatSaver import TwitchChatSaver
-from twitchtube.twitch.youtubeToTwitch import YouTubeToTwitch
+from twitchtube.twitch.TwitchChatSaver import TwitchChatSaver
+from twitchtube.twitch.TwitchChatSender import TwitchChatSender
 
-from twitchtube.youtube.twitch_to_youtube import TwitchToYouTube
-from twitchtube.youtube.save_youtube_chat import YouTubeChatSaver
+from twitchtube.youtube.YoutubeChatSender import YoutubeChatSender
+from twitchtube.youtube.YoutubeChatSaver import YoutubeChatSaver
 from twitchtube.youtube.YoutubePointManager import YoutubePointManager
 
 from youtubelivestreaming.live_broadcasts import get_live_broadcasts
@@ -32,9 +26,9 @@ def startUp(bot, youtube, youtube2):
     #We will share a Twitch socket. But, we still need two programs
     if ('twitch' in bot) and (bot['twitch'] is not None):
         socketToPass = socket.socket()
-        socketToPass.connect((twitchConfig.HOST, twitchConfig.PORT))
-        socketToPass.send("PASS " + twitchConfig.PASS + "\r\n")
-        socketToPass.send("NICK " + twitchConfig.NICK + "\r\n")
+        socketToPass.connect((config.HOST, config.PORT))
+        socketToPass.send("PASS " + config.PASS + "\r\n")
+        socketToPass.send("NICK " + config.NICK + "\r\n")
         socketToPass.send("JOIN #" + bot['twitch'] + " \r\n")
 
     run_event = threading.Event()
@@ -49,14 +43,14 @@ def startUp(bot, youtube, youtube2):
         thread.start()
         threads.append(thread)
 
-        tubeToTwitch = YouTubeToTwitch(socketToPass,run_event,bot)
+        tubeToTwitch = YoutubeToTwitch(socketToPass,run_event,bot)
         thread = threading.Thread(target=tubeToTwitch.sendYoutubeChatToTwitch, args=())
         thread.daemon = True
         thread.start()
         threads.append(thread)
 
     if ('youtube' in bot) and (bot['youtube'] is not None):
-        twitchToYoutube = TwitchToYouTube(bot, youtube)
+        twitchToYoutube = TwitchToYoutube(bot, youtube)
 
         youtubePointManager = YoutubePointManager(youtube)
         twitchToYoutube.register(youtubePointManager)
@@ -66,7 +60,7 @@ def startUp(bot, youtube, youtube2):
         thread.start()
         threads.append(thread)
 
-        ytcs = YouTubeChatSaver(bot, youtube2)
+        ytcs = YoutubeChatSaver(bot, youtube2)
         thread = threading.Thread(target=ytcs.run, args=(run_event,))
         thread.daemon = True
         thread.start()
@@ -90,7 +84,7 @@ def checkProcessFile():
     # make a secon service because we techinally have two bots
     youtube2 = get_authenticated_service(args)
 
-    client = MongoClient('mongodb://localhost:27017/')
+    client = MongoClient(config.mongoUrl)
     db = client[config.database]
 
     bot = db.twitchtubeBots.find_one({ '_id': ObjectId(args.botId)})
@@ -106,12 +100,6 @@ def checkProcessFile():
 
     # Install exception handler
     sys.excepthook = uncaught_exception_handler
-
-    if os.path.isfile(pidfile):
-        print "%s already exists, exiting" % pidfile
-        sys.exit()
-    else:
-        file(pidfile, 'w').write(pid + "\n\r")
 
     db.twitchtubeBots.update({ '_id': ObjectId(args.botId)}, {'$set': {'status': "running"}});
     startUp(bot, youtube, youtube2)

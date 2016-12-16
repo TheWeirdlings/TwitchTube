@@ -3,18 +3,18 @@ from time import sleep
 
 import config
 from youtubelivestreaming import live_messages
-from twitch_message_from_youtube import TwitchMessageFromYouTube
-from twitchtube.twitch.twitchChatSaver import YouTubeMessageFromTwitch
+from twitchtube.models.TwitchMessageModel import TwitchMessageModel
+from twitchtube.models.YoutubeMessageModel import YoutubeMessageModel
 
 import json
 
 twitchFromPrefix = "(From Twitch)"
 
-class YouTubeChatSaver(object):
+class YoutubeChatSaver(object):
     def __init__(self, bot, youtubeAuth):
         self.youtubeAuth = youtubeAuth
 
-        client = MongoClient('mongodb://localhost:27017/')
+        client = MongoClient(config.mongoUrl)
         db = client[config.database]
         self.mongoCommands = db.commands
         self.mongoYTChat = db.youtubeMessages
