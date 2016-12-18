@@ -27,9 +27,18 @@ def startUp(bot, youtube, youtube2):
     if ('twitch' in bot) and (bot['twitch'] is not None):
         socketToPass = socket.socket()
         socketToPass.connect((config.HOST, config.PORT))
-        socketToPass.send("PASS " + config.PASS + "\r\n")
-        socketToPass.send("NICK " + config.NICK + "\r\n")
-        socketToPass.send("JOIN #" + bot['twitch'] + " \r\n")
+
+        ircPass = "PASS " + config.PASS + "\r\n"
+        socketToPass.send(ircPass.encode('utf-8'))
+
+        ircNick = "NICK " + config.NICK + "\r\n"
+        socketToPass.send(ircNick.encode('utf-8'))
+
+        # ircUser = 'USER ' + config.NICK + ' 0 * :' + config.USER + '\r\n'
+        # socketToPass.send(ircUser.encode('utf-8'))
+
+        ircSend = "JOIN #" + bot['twitch'] + " \r\n"
+        socketToPass.send(ircSend.encode('utf-8'))
 
     run_event = threading.Event()
     run_event.set()
@@ -43,25 +52,28 @@ def startUp(bot, youtube, youtube2):
         thread.start()
         threads.append(thread)
 
-        tubeToTwitch = YoutubeToTwitch(socketToPass,run_event,bot)
-        thread = threading.Thread(target=tubeToTwitch.sendYoutubeChatToTwitch, args=())
+        tubeToTwitch = TwitchChatSender(socketToPass,run_event, bot)
+        thread = threading.Thread(target=tubeToTwitch.work, args=())
         thread.daemon = True
         thread.start()
         threads.append(thread)
 
     if ('youtube' in bot) and (bot['youtube'] is not None):
-        twitchToYoutube = TwitchToYoutube(bot, youtube)
-
-        youtubePointManager = YoutubePointManager(youtube)
-        twitchToYoutube.register(youtubePointManager)
-
-        thread = threading.Thread(target=twitchToYoutube.run, args=(run_event,))
+        # Chat saver
+        ytcs = YoutubeChatSaver(bot, youtube2)
+        thread = threading.Thread(target=ytcs.run, args=(run_event,))
         thread.daemon = True
         thread.start()
         threads.append(thread)
 
-        ytcs = YoutubeChatSaver(bot, youtube2)
-        thread = threading.Thread(target=ytcs.run, args=(run_event,))
+        # Chat sender
+        twitchToYoutube = YoutubeChatSender(bot, youtube)
+
+        # Subs
+        youtubePointManager = YoutubePointManager(youtube)
+        twitchToYoutube.register(youtubePointManager)
+
+        thread = threading.Thread(target=twitchToYoutube.run, args=(run_event,))
         thread.daemon = True
         thread.start()
         threads.append(thread)
@@ -104,5 +116,5 @@ def checkProcessFile():
     db.twitchtubeBots.update({ '_id': ObjectId(args.botId)}, {'$set': {'status': "running"}});
     startUp(bot, youtube, youtube2)
 
-# if __name__ == "__main__":
-checkProcessFile()
+if __name__ == "__main__":
+    checkProcessFile()

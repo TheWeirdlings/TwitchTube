@@ -71,7 +71,8 @@ class TwitchChatSender(object):
 
     def sendTwitchMessge(self, message):
         try:
-            self.s.send("PRIVMSG " + self.CHANNEL + " :" + message + "\r\n")
+            ircMessage = "PRIVMSG " + self.CHANNEL + " :" + message + "\r\n";
+            self.s.send(ircMessage.encode('utf-8'))
         except UnicodeDecodeError:
             print('Add support')
 
@@ -124,7 +125,6 @@ class TwitchChatSender(object):
         self.sendTwitchMessge(chatToSend['message'])
         # TODO: chatToSend should be a twitch chat model and that should mark itself as sent??
         twitchCollection.markSent();
-
 
     def work(self):
         while self.run_event.is_set():

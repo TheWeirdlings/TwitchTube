@@ -9,6 +9,7 @@ from bson.objectid import ObjectId
 import datetime
 
 from twitchtube.models.YoutubeMessageModel import YoutubeMessageModel
+from twitchtube.models.YoutubeMessageCollection import YoutubeMessageCollection
 from youtubelivestreaming import live_messages
 
 class YoutubeChatSender(object):
@@ -16,7 +17,7 @@ class YoutubeChatSender(object):
         self.subscribers = []
 
         self.botId = bot['_id']
-        self.ytChatModel = YoutubeMessageModel(self.botId)
+        self.ytChatModel = YoutubeMessageCollection(bot)
         self.livechat_id = bot['youtube']
         self.youtubeAuth = youtubeAuth
         self.setUpTimers()
@@ -31,6 +32,7 @@ class YoutubeChatSender(object):
     def sendNextTwitchChatToYoutube(self):
         self.ytChatModel.getNextMessageToSend()
         chatToSend = self.ytChatModel.mongoDocument
+
         if chatToSend is not None:
             self.ytChatModel.markSent()
             try:
@@ -72,7 +74,7 @@ class YoutubeChatSender(object):
 
     def run(self, run_event):
         while run_event.is_set():
-            self.notifiySubscribers()
-            self.sendTimers()
+            # self.notifiySubscribers()
+            # self.sendTimers()
             self.sendNextTwitchChatToYoutube()
             sleep(1)

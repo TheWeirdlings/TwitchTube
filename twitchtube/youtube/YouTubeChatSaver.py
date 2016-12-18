@@ -30,7 +30,7 @@ class YoutubeChatSaver(object):
         for command in self.commands:
             if (command['command'] == message['snippet']['displayMessage'] and twitchFromPrefix not in message['snippet']['displayMessage']):
                 #WE can send on the same thread as we are polling chat, so let's just queue this message up
-                youtubeMessage = YouTubeMessageFromTwitch("", command['message'], False)
+                youtubeMessage = YoutubeMessageModel("", command['message'], False)
                 self.mongoTwitchChat.insert(youtubeMessage.toMongoObject(self.bot))
 
     def save(self, messages):
@@ -43,7 +43,7 @@ class YoutubeChatSaver(object):
             if (message['authorDetails']['displayName'] == 'Twitchtube'):
                 continue
 
-            messageToSave = TwitchMessageFromYouTube(message['authorDetails']['displayName'], message['snippet']['displayMessage'], message['id'], self.botId)
+            messageToSave = TwitchMessageModel(message['authorDetails']['displayName'], message['snippet']['displayMessage'], message['id'], self.botId)
             mongoMessagesToSaveToMongo.append(messageToSave.toMongoObject())
 
             #Confirm that we have a new message

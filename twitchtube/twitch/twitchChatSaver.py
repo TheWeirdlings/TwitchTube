@@ -6,6 +6,8 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 
 import config
+from twitchtube.util.MLStripper import strip_tags
+from twitchtube.models.YoutubeMessageModel import YoutubeMessageModel
 
 client = MongoClient(config.mongoUrl)
 db = client[config.database]
@@ -29,11 +31,6 @@ class TwitchChatSaver(object):
 
         self.bot = bot
 
-    def strip_tags(self, html):
-        s = MLStripper()
-        s.feed(html)
-        return s.get_data()
-
     def sendTwitchMessge(self, message):
         try:
             self.s.send("PRIVMSG " + self.CHANNEL + " :" + message + "\r\n")
@@ -50,7 +47,8 @@ class TwitchChatSaver(object):
         youtubeMessage = ""
         # Checks whether the message is PING because its a method of Twitch to check if you're afk
         if ("PING" in line):
-            self.s.send("PONG %s\r\n" % line[1])
+            ircPong = "PONG %s\r\n" % line[1]
+            self.s.send(ircPong.encode('utf-8'))
         else:
             parts = line.split(":", 2)
             if "QUIT" not in parts[1] and "JOIN" not in parts[1] and "PART" not in parts[1]:
@@ -61,7 +59,7 @@ class TwitchChatSaver(object):
                     message = ""
 
                 # Sets the username variable to the actual username
-                usernamesplit = string.split(parts[1], "!")
+                usernamesplit = parts[1].split("!")
                 username = usernamesplit[0]
 
                 # Only works after twitch is done announcing stuff (MODT = Message of the day)
@@ -71,11 +69,11 @@ class TwitchChatSaver(object):
                     if ("(From YouTube)" in line or len(message) > 200 or len(message) < 1):
                         print("Skip chat")
                     else:
-                        message = self.strip_tags(message)
+                        message = strip_tags(message)
                         message = cgi.escape(message)
                         if message:
                             self.checkForCommands(message, username)
-                            youtubeMessage = YouTubeMessageFromTwitch(username, message)
+                            youtubeMessage = YoutubeMessageModel(username, message)
                             self.twitchMessagesToSave.append(youtubeMessage.toMongoObject(self.bot))
 
                 for l in parts:
@@ -84,8 +82,8 @@ class TwitchChatSaver(object):
 
     def start(self, run_event):
         while run_event.is_set():
-            self.readbuffer = self.readbuffer + self.s.recv(1024)
-            temp = string.split(self.readbuffer, "\n")
+            self.readbuffer = self.readbuffer + self.s.recv(1024).decode()
+            temp = self.readbuffer.split("\n")
             self.readbuffer = temp.pop()
 
             for line in temp:
