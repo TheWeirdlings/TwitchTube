@@ -53,4 +53,8 @@ Run the script
 ---------------------
 python init.py --botId=[insert-bot-id] or python init.py --botId=[insert-bot-id] --noauth_local_webserver for your first run
 
+or
+
+pm2 start --name=ThehollidayInnBot init.py -- --botId=[bot-id]
+
 When restarting the bot, you will need to remove the pid file. Run the command rm tmp/[insert-bot-id].txt

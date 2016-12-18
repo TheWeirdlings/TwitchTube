@@ -2,10 +2,13 @@ import datetime
 from pymongo import MongoClient
 
 # @TODO: Move somwehre else?
-import config
-client = MongoClient(config.mongoUrl)
-db = client[config.database]
-mongoYTChat = db.youtubeMessages
+# import config
+# client = MongoClient(config.mongoUrl)
+# db = client[config.database]
+# mongoYTChat = db.youtubeMessages
+
+import redis
+r = redis.StrictRedis()
 
 class YoutubeMessageCollection(object):
     def __init__(self, bot):
@@ -13,6 +16,7 @@ class YoutubeMessageCollection(object):
 
     # These are more of collection/reposiotry functions
     def getNextMessageToSend(self):
+        return r.lpop("youtubeMessageToSync")
         self.mongoDocument = mongoYTChat.find_one({
             "sent": False, "bot_id": self.bot['_id'],
             "date": {

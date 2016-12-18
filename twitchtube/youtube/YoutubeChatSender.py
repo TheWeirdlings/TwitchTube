@@ -1,12 +1,14 @@
 import sys
 from time import sleep
-from pymongo import MongoClient
-client = MongoClient('mongodb://localhost:27017/')
-import config
-db = client[config.database]
-mongoChat = db.twitchMessages
 from bson.objectid import ObjectId
 import datetime
+import json
+
+from pymongo import MongoClient
+import config
+client = MongoClient(config.mongoUrl)
+db = client[config.database]
+mongoChat = db.twitchMessages
 
 from twitchtube.models.YoutubeMessageModel import YoutubeMessageModel
 from twitchtube.models.YoutubeMessageCollection import YoutubeMessageCollection
@@ -30,16 +32,22 @@ class YoutubeChatSender(object):
             subscriber.execute();
 
     def sendNextTwitchChatToYoutube(self):
-        self.ytChatModel.getNextMessageToSend()
-        chatToSend = self.ytChatModel.mongoDocument
+        # self.ytChatModel.getNextMessageToSend()
+        # chatToSend = self.ytChatModel.mongoDocument
 
-        if chatToSend is not None:
-            self.ytChatModel.markSent()
-            try:
-                live_messages.insert_message(self.youtubeAuth, self.livechat_id, chatToSend['message'])
-            except:
-                e = sys.exc_info()[0]
-                print("Error: %s" % e)
+        chatToSend = self.ytChatModel.getNextMessageToSend()
+
+        if chatToSend is None:
+            return
+
+        # self.ytChatModel.markSent()
+        chatToSend = json.loads(chatToSend.decode())
+
+        try:
+            live_messages.insert_message(self.youtubeAuth, self.livechat_id, chatToSend['message'])
+        except:
+            e = sys.exc_info()[0]
+            print("Error: %s" % e)
 
     def setUpTimers(self):
         timers = db.timers.find({"botId": str(ObjectId(self.botId))})

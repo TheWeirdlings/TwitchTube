@@ -73,8 +73,9 @@ class TwitchChatSaver(object):
                         message = cgi.escape(message)
                         if message:
                             self.checkForCommands(message, username)
-                            youtubeMessage = YoutubeMessageModel(username, message)
-                            self.twitchMessagesToSave.append(youtubeMessage.toMongoObject(self.bot))
+                            youtubeMessage = YoutubeMessageModel(username, message, self.bot)
+                            youtubeMessage.save()
+                            # self.twitchMessagesToSave.append(youtubeMessage.toMongoObject(self.bot))
 
                 for l in parts:
                     if "End of /NAMES list" in l:

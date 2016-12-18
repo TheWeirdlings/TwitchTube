@@ -68,6 +68,8 @@ def startUp(bot, youtube, youtube2):
 
         # Chat sender
         twitchToYoutube = YoutubeChatSender(bot, youtube)
+        twitchToYoutube.run(run_event)
+        return
 
         # Subs
         youtubePointManager = YoutubePointManager(youtube)
