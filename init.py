@@ -21,7 +21,6 @@ from youtubelivestreaming.live_broadcasts import get_live_broadcasts
 from helpers import get_authenticated_service
 #endlocalfiles
 
-
 def startUp(bot, youtube, youtube2):
     #We will share a Twitch socket. But, we still need two programs
     if ('twitch' in bot) and (bot['twitch'] is not None):
@@ -68,8 +67,6 @@ def startUp(bot, youtube, youtube2):
 
         # Chat sender
         twitchToYoutube = YoutubeChatSender(bot, youtube)
-        twitchToYoutube.run(run_event)
-        return
 
         # Subs
         youtubePointManager = YoutubePointManager(youtube)
@@ -102,18 +99,6 @@ def checkProcessFile():
     db = client[config.database]
 
     bot = db.twitchtubeBots.find_one({ '_id': ObjectId(args.botId)})
-
-    #Create a lock for this chat
-    pid = str(os.getpid())
-    pidfile = "tmp/" + str(bot['_id']) + ".txt"
-
-    #Set up logging
-    logfile = "tmp/" + str(bot['_id']) + "-logfile.txt"
-    logging.basicConfig(filename=logfile, level=logging.DEBUG)
-    logging.debug('Log file is good.')
-
-    # Install exception handler
-    sys.excepthook = uncaught_exception_handler
 
     db.twitchtubeBots.update({ '_id': ObjectId(args.botId)}, {'$set': {'status': "running"}});
     startUp(bot, youtube, youtube2)

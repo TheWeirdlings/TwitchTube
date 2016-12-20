@@ -3,16 +3,20 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 
 # @TODO: Move somwehre else?
-import config
-client = MongoClient(config.mongoUrl)
-db = client[config.database]
-mongoChat = db.twitchMessages
+# import config
+# client = MongoClient(config.mongoUrl)
+# db = client[config.database]
+# mongoChat = db.twitchMessages
+
+import redis
+r = redis.StrictRedis()
 
 class TwitchMessageCollection(object):
     def __init__(self, bot):
         self.botId = bot['_id']
 
     def getNextMessageToSend(self):
+        return r.lpop("twtichMessageToSync")
         self.mongoDocument = mongoChat.find_one({
             "sent": False, "bot_id": ObjectId(self.botId),
             "date": {

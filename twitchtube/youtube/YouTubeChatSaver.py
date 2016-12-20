@@ -1,5 +1,7 @@
 from pymongo import MongoClient
 from time import sleep
+from dateutil import parser
+from datetime import datetime, timezone
 
 import config
 from youtubelivestreaming import live_messages
@@ -23,6 +25,8 @@ class YoutubeChatSaver(object):
         self.botId = bot['_id']
 
         self.livechat_id = bot['youtube']
+        # @TODO: Store this and load from redis
+        self.lastSyncedMessageDate = datetime.now(timezone.utc)
         # self.commands = self.mongoCommands.find({"botId": str(bot['_id'])})
 
     def applyCommands(self, message):
@@ -35,8 +39,6 @@ class YoutubeChatSaver(object):
 
     def save(self, messages):
         mongoMessagesToSaveToMongo = []
-        #TODO: Get bulk to work
-        #bulkop = self.mongoYTChat.initialize_ordered_bulk_op()
 
         for message in messages:
             #Don't save chat sent from the bot - these are commands and timers
@@ -44,17 +46,14 @@ class YoutubeChatSaver(object):
                 continue
 
             messageToSave = TwitchMessageModel(message['authorDetails']['displayName'], message['snippet']['displayMessage'], message['id'], self.botId)
-            mongoMessagesToSaveToMongo.append(messageToSave.toMongoObject())
 
-            #Confirm that we have a new message
-            if self.mongoYTChat.find_one({'youtubeId': message['id']}) is None:
-                self.mongoYTChat.insert(messageToSave.toMongoObject())
-                self.applyCommands(message);
-            #bulkop.find({'youtubeId': message['id']}).upsert().update(messageToSave.toMongoObject())
+            # Confirm that we have a new message
+            messagePublishedDate = message['snippet']['publishedAt']
+            messagePublishedDate = parser.parse(messagePublishedDate)
 
-        #TODO: How do we check if there are bluk operations
-        # if len(mongoMessagesToSaveToMongo) > 0:
-        #     bulkop.execute()
+            if self.lastSyncedMessageDate < messagePublishedDate:
+                messageToSave.save()
+                self.lastSyncedMessageDate = messagePublishedDate
 
     def run(self, run_event):
         nextPageToken = None;
@@ -68,5 +67,6 @@ class YoutubeChatSaver(object):
             messages = response.get("items", [])
 
             self.save(messages)
+
             #TODO: I think this isn't fast enough :(
             sleep(pollingIntervaLInSeconds)

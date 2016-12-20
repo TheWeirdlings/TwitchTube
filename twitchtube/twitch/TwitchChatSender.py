@@ -122,9 +122,9 @@ class TwitchChatSender(object):
         if chatToSend is None:
             return
 
+        chatToSend = json.loads(chatToSend.decode())
+
         self.sendTwitchMessge(chatToSend['message'])
-        # TODO: chatToSend should be a twitch chat model and that should mark itself as sent??
-        twitchCollection.markSent();
 
     def work(self):
         while self.run_event.is_set():

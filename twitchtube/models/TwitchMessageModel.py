@@ -1,5 +1,9 @@
 import datetime
 from bson.objectid import ObjectId
+import json
+
+import redis
+r = redis.StrictRedis()
 
 class TwitchMessageModel(object):
     def __init__(self, author, text, youtubeId, botId):
@@ -23,3 +27,18 @@ class TwitchMessageModel(object):
             "date": datetime.datetime.utcnow()
         }
         return mongoMessage #For bulk { '$set': mongoMessage }
+
+    def save(self):
+        time = datetime.datetime.utcnow()
+
+        chat = {
+            "bot_id": str(self.botId),
+            "message": self.message,
+            "sent": False,
+            "youtubeId": self.youtubeId,
+            "author": self.author,
+            "date": time.isoformat(),
+            "fromService": "twitch",
+        }
+
+        r.lpush("twtichMessageToSync", json.dumps(chat))

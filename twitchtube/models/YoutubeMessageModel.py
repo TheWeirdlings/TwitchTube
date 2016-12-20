@@ -8,6 +8,8 @@ class YoutubeMessageModel(object):
     def __init__(self, author, text, bot, addFromTwitch = True):
         twitchFromPrefix = "(From Twitch)"
 
+        self.author = author
+
         message = ""
         if (addFromTwitch):
             message = twitchFromPrefix + " "
@@ -36,6 +38,7 @@ class YoutubeMessageModel(object):
             "bot_id": str(self.bot['_id']),
             "message": self.message,
             "sent": False,
+            "author": self.author,
             "date": time.isoformat(),
             "fromService": "youtube",
         }
