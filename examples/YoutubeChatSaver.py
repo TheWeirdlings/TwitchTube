@@ -20,7 +20,7 @@ if __name__ == "__main__":
     youtube2 = get_authenticated_service(args)
 
     bot = {
-        "youtube": "EiEKGFVDYzZrWmItSzZJdnBvaEl5SWJMLVZRQRIFL2xpdmU",
+        "youtube": config.youtube,
         "_id": "5853c8142b471021fc94b043"
     }
 
