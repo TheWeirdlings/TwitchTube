@@ -16,7 +16,7 @@ class YoutubeChatSender(object):
         self.ytChatModel = YoutubeMessageCollection(bot)
         self.livechat_id = bot['youtube']
         self.youtubeAuth = youtubeAuth
-        self.setUpTimers()
+        # self.setUpTimers()
 
     def register(self, subscriber):
         self.subscribers.append(subscriber)

@@ -16,11 +16,6 @@ class YoutubeChatSaver(object):
     def __init__(self, bot, youtubeAuth):
         self.youtubeAuth = youtubeAuth
 
-        client = MongoClient(config.mongoUrl)
-        db = client[config.database]
-        self.mongoCommands = db.commands
-        self.mongoYTChat = db.youtubeMessages
-        self.mongoTwitchChat = db.twitchMessages
         self.bot = bot
         self.botId = bot['_id']
 
@@ -54,7 +49,6 @@ class YoutubeChatSaver(object):
             messagePublishedDate = parser.parse(messagePublishedDate)
 
             if self.lastSyncedMessageDate < messagePublishedDate:
-                print("Saving", flush=True)
                 messageToSave.save()
                 self.lastSyncedMessageDate = messagePublishedDate
 

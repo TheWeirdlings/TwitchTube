@@ -66,7 +66,7 @@ class TwitchChatSaver(object):
                         message = strip_tags(message)
                         message = cgi.escape(message)
                         if message:
-                            self.checkForCommands(message, username)
+                            # self.checkForCommands(message, username)
                             youtubeMessage = YoutubeMessageModel(username, message, self.bot)
                             youtubeMessage.save()
                             # self.twitchMessagesToSave.append(youtubeMessage.toMongoObject(self.bot))
