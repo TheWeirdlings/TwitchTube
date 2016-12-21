@@ -4,12 +4,6 @@ from bson.objectid import ObjectId
 import datetime
 import json
 
-from pymongo import MongoClient
-import config
-client = MongoClient(config.mongoUrl)
-db = client[config.database]
-mongoChat = db.twitchMessages
-
 from twitchtube.models.YoutubeMessageModel import YoutubeMessageModel
 from twitchtube.models.YoutubeMessageCollection import YoutubeMessageCollection
 from youtubelivestreaming import live_messages

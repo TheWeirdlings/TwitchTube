@@ -3,11 +3,6 @@ import string
 from pymongo import MongoClient
 import datetime
 
-import config
-client = MongoClient(config.mongoUrl)
-db = client[config.database]
-mongoTwitchUsers = db.youtubeViewers
-
 from youtubelivestreaming.live_broadcasts import get_live_broadcasts_list
 
 class YoutubePointManager(object):

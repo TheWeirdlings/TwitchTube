@@ -69,8 +69,8 @@ def startUp(bot, youtube, youtube2):
         twitchToYoutube = YoutubeChatSender(bot, youtube)
 
         # Subs
-        youtubePointManager = YoutubePointManager(youtube)
-        twitchToYoutube.register(youtubePointManager)
+        # youtubePointManager = YoutubePointManager(youtube)
+        # twitchToYoutube.register(youtubePointManager)
 
         thread = threading.Thread(target=twitchToYoutube.run, args=(run_event,))
         thread.daemon = True

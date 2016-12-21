@@ -9,12 +9,6 @@ import config
 from twitchtube.util.MLStripper import strip_tags
 from twitchtube.models.YoutubeMessageModel import YoutubeMessageModel
 
-client = MongoClient(config.mongoUrl)
-db = client[config.database]
-bots = db.twitchtubeBots
-mongoChat = db.twitchMessages
-mongoCommands = db.commands
-
 youtubeFromPrefix = "(From YouTube)"
 
 class TwitchChatSaver(object):
@@ -27,7 +21,7 @@ class TwitchChatSaver(object):
         self.twitchMessagesToSave = []
         self.s = incSocket
 
-        self.commands = mongoCommands.find({"botId": str(ObjectId(bot['_id'])) })
+        # self.commands = mongoCommands.find({"botId": str(ObjectId(bot['_id'])) })
 
         self.bot = bot
 
@@ -81,17 +75,19 @@ class TwitchChatSaver(object):
                     if "End of /NAMES list" in l:
                         self.MOTD = True
 
+    def readSocket(self):
+        self.readbuffer = self.readbuffer + self.s.recv(1024).decode()
+        temp = self.readbuffer.split("\n")
+        self.readbuffer = temp.pop()
+
+        for line in temp:
+            self.parseLine(line)
+
+        if (len(self.twitchMessagesToSave) > 0):
+            mongoChat.insert_many(self.twitchMessagesToSave)
+            self.twitchMessagesToSave = []
+
     def start(self, run_event):
         while run_event.is_set():
-            self.readbuffer = self.readbuffer + self.s.recv(1024).decode()
-            temp = self.readbuffer.split("\n")
-            self.readbuffer = temp.pop()
-
-            for line in temp:
-                self.parseLine(line)
-
-            if (len(self.twitchMessagesToSave) > 0):
-                mongoChat.insert_many(self.twitchMessagesToSave)
-                self.twitchMessagesToSave = []
-
+            self.readSocket()
             sleep(1.0 / (100.0/30.0))

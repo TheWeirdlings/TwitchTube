@@ -70,11 +70,9 @@ class TwitchChatSender(object):
                     self.sendTwitchMessge(timerMessage)
 
     def sendTwitchMessge(self, message):
-        try:
-            ircMessage = "PRIVMSG " + self.CHANNEL + " :" + message + "\r\n";
-            self.s.send(ircMessage.encode('utf-8'))
-        except UnicodeDecodeError:
-            print('Add support')
+        # ircMessage = "PRIVMSG " + self.CHANNEL + " :" + message + "\r\n";
+        ircMessage = 'PRIVMSG %s :%s\n' % (self.CHANNEL, message)
+        self.s.send(ircMessage.encode('utf-8'))
 
     def checkForNewFollower(self):
         now = datetime.datetime.now(pytz.UTC)
@@ -111,7 +109,6 @@ class TwitchChatSender(object):
     def sendMessageFromQueue(self):
         twitchCollection = TwitchMessageCollection(self.bot)
         chatToSend = twitchCollection.getNextMessageToSend()
-
         # self.sendTimers()
 
         # if 'twitchOptions' in self.bot and self.bot['twitchOptions']['displayTwitchAlerts'] == True:
@@ -123,7 +120,6 @@ class TwitchChatSender(object):
             return
 
         chatToSend = json.loads(chatToSend.decode())
-
         self.sendTwitchMessge(chatToSend['message'])
 
     def work(self):

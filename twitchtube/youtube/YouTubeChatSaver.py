@@ -29,6 +29,8 @@ class YoutubeChatSaver(object):
         self.lastSyncedMessageDate = datetime.now(timezone.utc)
         # self.commands = self.mongoCommands.find({"botId": str(bot['_id'])})
 
+        self.nextPageToken = None;
+
     def applyCommands(self, message):
         self.commands = self.mongoCommands.find({"botId": str(self.botId)})
         for command in self.commands:
@@ -52,21 +54,23 @@ class YoutubeChatSaver(object):
             messagePublishedDate = parser.parse(messagePublishedDate)
 
             if self.lastSyncedMessageDate < messagePublishedDate:
+                print("Saving", flush=True)
                 messageToSave.save()
                 self.lastSyncedMessageDate = messagePublishedDate
 
+    def saveChat(self):
+        response = live_messages.list_messages(self.youtubeAuth, self.livechat_id, self.nextPageToken)
+
+        self.nextPageToken = response['nextPageToken']
+        pollingIntervalInMillis = response['pollingIntervalMillis']
+        pollingIntervaLInSeconds = pollingIntervalInMillis/1000
+        messages = response.get("items", [])
+
+        self.save(messages)
+
+        #TODO: I think this isn't fast enough :(
+        sleep(pollingIntervaLInSeconds)
+
     def run(self, run_event):
-        nextPageToken = None;
-        prevMessage = None;
         while run_event.is_set():
-            response = live_messages.list_messages(self.youtubeAuth, self.livechat_id, nextPageToken)
-
-            nextPageToken = response['nextPageToken']
-            pollingIntervalInMillis = response['pollingIntervalMillis']
-            pollingIntervaLInSeconds = pollingIntervalInMillis/1000
-            messages = response.get("items", [])
-
-            self.save(messages)
-
-            #TODO: I think this isn't fast enough :(
-            sleep(pollingIntervaLInSeconds)
+            self.saveChat()
