@@ -21,6 +21,9 @@ from youtubelivestreaming.live_broadcasts import get_live_broadcasts
 from helpers import get_authenticated_service
 #endlocalfiles
 
+client = MongoClient(config.mongoUrl)
+db = client[config.database]
+
 def startUp(bot, youtube, youtube2):
     #We will share a Twitch socket. But, we still need two programs
     if ('twitch' in bot) and (bot['twitch'] is not None):
@@ -45,7 +48,7 @@ def startUp(bot, youtube, youtube2):
     threads = []
 
     if ('twitch' in bot) and (bot['twitch'] is not None):
-        ts = TwitchChatSaver(socketToPass, bot)
+        ts = TwitchChatSaver(socketToPass, bot, db)
         thread = threading.Thread(target=ts.start, args=(run_event,))
         thread.daemon = True
         thread.start()
@@ -59,7 +62,7 @@ def startUp(bot, youtube, youtube2):
 
     if ('youtube' in bot) and (bot['youtube'] is not None):
         # Chat saver
-        ytcs = YoutubeChatSaver(bot, youtube2)
+        ytcs = YoutubeChatSaver(bot, youtube2, db)
         thread = threading.Thread(target=ytcs.run, args=(run_event,))
         thread.daemon = True
         thread.start()
@@ -94,9 +97,6 @@ def checkProcessFile():
     youtube = get_authenticated_service(args)
     # make a secon service because we techinally have two bots
     youtube2 = get_authenticated_service(args)
-
-    client = MongoClient(config.mongoUrl)
-    db = client[config.database]
 
     bot = db.twitchtubeBots.find_one({ '_id': ObjectId(args.botId)})
 

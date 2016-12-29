@@ -22,6 +22,7 @@ def applyActionToBot(botId, action):
     else:
         startScript = "pm2 {Action} {BotId}"
     botStartScript = startScript.replace("{Action}", str(action)).replace("{BotId}", str(botId))
+    print(botStartScript, flush=True)
     os.system(botStartScript)
 
 while 1:
