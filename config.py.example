@@ -2,6 +2,7 @@ mongoUrl = 'mongodb://localhost:27017/'
 
 database = 'twitchtubebots-dev'
 rabbitQueue = 'twitchtubebots-dev'
+reddisBotCommandQueue = 'twitchtube-bot-queue'
 
 HOST = "irc.chat.twitch.tv"
 NICK = "Replace with Nickname of Bot"
