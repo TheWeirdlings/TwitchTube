@@ -7,42 +7,31 @@ import config
 from youtubelivestreaming import live_messages
 from twitchtube.models.TwitchMessageModel import TwitchMessageModel
 from twitchtube.models.YoutubeMessageModel import YoutubeMessageModel
+from twitchtube.util.CommandManager import CommandManager
 
 import json
 
-twitchFromPrefix = "(From Twitch)"
-
 class YoutubeChatSaver(object):
-    def __init__(self, bot, youtubeAuth):
+    def __init__(self, bot, youtubeAuth, db):
         self.youtubeAuth = youtubeAuth
-
         self.bot = bot
         self.botId = bot['_id']
-
         self.livechat_id = bot['youtube']
         # @TODO: Store this and load from redis
         self.lastSyncedMessageDate = datetime.now(timezone.utc)
-        # self.commands = self.mongoCommands.find({"botId": str(bot['_id'])})
-
         self.nextPageToken = None;
-
-    def applyCommands(self, message):
-        self.commands = self.mongoCommands.find({"botId": str(self.botId)})
-        for command in self.commands:
-            if (command['command'] == message['snippet']['displayMessage'] and twitchFromPrefix not in message['snippet']['displayMessage']):
-                #WE can send on the same thread as we are polling chat, so let's just queue this message up
-                youtubeMessage = YoutubeMessageModel("", command['message'], False)
-                self.mongoTwitchChat.insert(youtubeMessage.toMongoObject(self.bot))
+        self.commandManager = CommandManager(db, bot)
 
     def save(self, messages):
-        mongoMessagesToSaveToMongo = []
-
         for message in messages:
-            #Don't save chat sent from the bot - these are commands and timers
+            # Don't save chat sent from the bot - these are commands and timers
+            # @TODO Abstract Author to constant
             if (message['authorDetails']['displayName'] == 'Twitchtube'):
                 continue
 
-            messageToSave = TwitchMessageModel(message['authorDetails']['displayName'], message['snippet']['displayMessage'], message['id'], self.botId)
+            username = message['authorDetails']['displayName']
+            messagecontent = message['snippet']['displayMessage']
+            messageToSave = TwitchMessageModel(username, messagecontent, message['id'], self.botId)
 
             # Confirm that we have a new message
             messagePublishedDate = message['snippet']['publishedAt']
@@ -51,6 +40,13 @@ class YoutubeChatSaver(object):
             if self.lastSyncedMessageDate < messagePublishedDate:
                 messageToSave.save()
                 self.lastSyncedMessageDate = messagePublishedDate
+
+                #check commands
+                commandMessage = self.commandManager.checkForCommands(messagecontent, username)
+                if commandMessage is not None:
+                    # @TODO Abstract Author to constant
+                    commandMessageToSave = YoutubeMessageModel('Twitchtube', commandMessage, self.bot)
+                    commandMessageToSave.save()
 
     def saveChat(self):
         response = live_messages.list_messages(self.youtubeAuth, self.livechat_id, self.nextPageToken)

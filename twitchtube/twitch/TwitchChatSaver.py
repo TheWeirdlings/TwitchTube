@@ -8,34 +8,20 @@ from bson.objectid import ObjectId
 import config
 from twitchtube.util.MLStripper import strip_tags
 from twitchtube.models.YoutubeMessageModel import YoutubeMessageModel
-
-youtubeFromPrefix = "(From YouTube)"
+from twitchtube.util.CommandManager import CommandManager
 
 class TwitchChatSaver(object):
-
-    def __init__(self, incSocket, bot):
+    def __init__(self, incSocket, bot, db):
         self.readbuffer = ""
         self.MOTD = False
         self.CHANNEL = "#" + bot['twitch']
-
-        self.twitchMessagesToSave = []
         self.s = incSocket
-
-        # self.commands = mongoCommands.find({"botId": str(ObjectId(bot['_id'])) })
-
         self.bot = bot
+        self.commandManager = CommandManager(db, bot)
 
     def sendTwitchMessge(self, message):
-        try:
-            self.s.send("PRIVMSG " + self.CHANNEL + " :" + message + "\r\n")
-        except UnicodeDecodeError:
-            print('Add support')
-
-    def checkForCommands(self, message, username):
-        self.commands = mongoCommands.find({"botId": str(ObjectId(self.bot['_id'])) })
-        for command in self.commands:
-            if (command['command'] == message and youtubeFromPrefix not in message):
-                self.sendTwitchMessge(command['message'])
+        ircMessage = 'PRIVMSG %s :%s\n' % (self.CHANNEL, message)
+        self.s.send(ircMessage.encode('utf-8'))
 
     def parseLine(self, line):
         youtubeMessage = ""
@@ -58,18 +44,24 @@ class TwitchChatSaver(object):
 
                 # Only works after twitch is done announcing stuff (MODT = Message of the day)
                 if self.MOTD:
-                    #Check if the message was transferred from Youtube.
-                    # @TODO: Maybe one day we can have a more sequential syncing?
-                    if ("(From YouTube)" in line or len(message) > 200 or len(message) < 1):
-                        print("Skip chat")
-                    else:
-                        message = strip_tags(message)
-                        message = cgi.escape(message)
-                        if message:
-                            # self.checkForCommands(message, username)
-                            youtubeMessage = YoutubeMessageModel(username, message, self.bot)
-                            youtubeMessage.save()
-                            # self.twitchMessagesToSave.append(youtubeMessage.toMongoObject(self.bot))
+                    if (len(message) > 200 or len(message) < 1):
+                        return
+
+                    message = strip_tags(message)
+                    message = cgi.escape(message)
+                    if message is None:
+                        return
+
+                    youtubeMessage = YoutubeMessageModel(username, message, self.bot)
+                    youtubeMessage.save()
+
+                    commandMessage = self.commandManager.checkForCommands(message, username)
+                    if commandMessage is None:
+                        return
+
+                    # @TODO: Should we queue up a message instead?
+                    self.sendTwitchMessge(commandMessage)
+
 
                 for l in parts:
                     if "End of /NAMES list" in l:
