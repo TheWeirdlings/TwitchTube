@@ -39,9 +39,10 @@ class YoutubeChatSender(object):
 
         try:
             live_messages.insert_message(self.youtubeAuth, self.livechat_id, chatToSend['message'])
+            print(chatToSend, flush=True)
         except:
             e = sys.exc_info()[0]
-            print("Error: %s" % e)
+            print("Error: %s" % e, flush=True)
 
     def setUpTimers(self):
         timers = db.timers.find({"botId": str(ObjectId(self.botId))})

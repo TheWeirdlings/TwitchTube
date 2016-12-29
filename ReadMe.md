@@ -58,3 +58,10 @@ or
 pm2 start --name=ThehollidayInnBot init.py -- --botId=[bot-id]
 
 When restarting the bot, you will need to remove the pid file. Run the command rm tmp/[insert-bot-id].txt
+
+Server Set Up
+---------------------
+1. Install Redis https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-redis-on-ubuntu-16-04
+2. Install mongo
+3. Install nodejs https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-an-ubuntu-14-04-server
+4. Install pm2 - npm isntall -g pm2

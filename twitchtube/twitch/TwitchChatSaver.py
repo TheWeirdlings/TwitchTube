@@ -83,10 +83,6 @@ class TwitchChatSaver(object):
         for line in temp:
             self.parseLine(line)
 
-        if (len(self.twitchMessagesToSave) > 0):
-            mongoChat.insert_many(self.twitchMessagesToSave)
-            self.twitchMessagesToSave = []
-
     def start(self, run_event):
         while run_event.is_set():
             self.readSocket()
