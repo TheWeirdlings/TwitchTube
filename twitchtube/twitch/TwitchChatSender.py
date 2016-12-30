@@ -39,38 +39,7 @@ class TwitchChatSender(object):
         for subscriber in self.subscribers:
             subscriber.exectute()
 
-    def setUpTimers(self):
-        timers = db.timers.find({"botId": str(ObjectId(self.bot['_id'])) })
-
-        #Timers are in the seciton because we need a program that polls the time
-        self.timers = {}
-
-        for timer in timers:
-            interval = int(timer['interval'])
-
-            while interval <= 60:
-                if interval not in self.timers:
-                    self.timers[interval] = []
-                self.timers[interval].append(timer['message'])
-                interval += interval
-
-        now = datetime.datetime.now()
-        self.lastMinuteCheckedForTimers = now.minute
-
-    def sendTimers(self):
-        now = datetime.datetime.now()
-        currentMinute = now.minute
-
-        if currentMinute != self.lastMinuteCheckedForTimers:
-            self.lastMinuteCheckedForTimers = currentMinute
-            if currentMinute == 0:
-                currentMinute = 60
-            if currentMinute in self.timers:
-                for timerMessage in self.timers[currentMinute]:
-                    self.sendTwitchMessge(timerMessage)
-
     def sendTwitchMessge(self, message):
-        # ircMessage = "PRIVMSG " + self.CHANNEL + " :" + message + "\r\n";
         ircMessage = 'PRIVMSG %s :%s\n' % (self.CHANNEL, message)
         self.s.send(ircMessage.encode('utf-8'))
 
@@ -109,12 +78,11 @@ class TwitchChatSender(object):
     def sendMessageFromQueue(self):
         twitchCollection = TwitchMessageCollection(self.bot)
         chatToSend = twitchCollection.getNextMessageToSend()
-        # self.sendTimers()
 
         # if 'twitchOptions' in self.bot and self.bot['twitchOptions']['displayTwitchAlerts'] == True:
         #     self.checkForNewFollower()
-        #
-        # self.notifySubscribers()
+
+        self.notifySubscribers()
 
         if chatToSend is None:
             return
