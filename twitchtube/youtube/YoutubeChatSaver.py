@@ -45,7 +45,7 @@ class YoutubeChatSaver(object):
                 commandMessage = self.commandManager.checkForCommands(messagecontent, username)
                 if commandMessage is not None:
                     # @TODO Abstract Author to constant
-                    commandMessageToSave = YoutubeMessageModel('Twitchtube', commandMessage, self.bot)
+                    commandMessageToSave = YoutubeMessageModel('', commandMessage, self.bot)
                     commandMessageToSave.save()
 
     def saveChat(self):

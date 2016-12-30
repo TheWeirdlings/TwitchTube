@@ -19,6 +19,7 @@ class YoutubeMessageModel(object):
 
         self.message = message + text
         self.bot = bot;
+        self.botId = self.bot['_id'];
 
 
     def toMongoObject(self, bot):
@@ -43,4 +44,4 @@ class YoutubeMessageModel(object):
             "fromService": "youtube",
         }
 
-        r.lpush("youtubeMessageToSync", json.dumps(chat))
+        r.lpush("youtubeMessageToSync" + str(self.botId), json.dumps(chat))

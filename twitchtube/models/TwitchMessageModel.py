@@ -45,4 +45,4 @@ class TwitchMessageModel(object):
             "fromService": "twitch",
         }
 
-        r.lpush("twtichMessageToSync", json.dumps(chat))
+        r.lpush("twtichMessageToSync" + str(self.botId), json.dumps(chat))

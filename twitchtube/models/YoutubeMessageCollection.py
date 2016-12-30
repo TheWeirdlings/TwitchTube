@@ -13,10 +13,11 @@ r = redis.StrictRedis()
 class YoutubeMessageCollection(object):
     def __init__(self, bot):
         self.bot = bot
+        self.botId = self.bot['_id'];
 
     # These are more of collection/reposiotry functions
     def getNextMessageToSend(self):
-        return r.lpop("youtubeMessageToSync")
+        return r.lpop("youtubeMessageToSync" + str(self.botId))
         self.mongoDocument = mongoYTChat.find_one({
             "sent": False, "bot_id": self.bot['_id'],
             "date": {

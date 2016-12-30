@@ -16,7 +16,7 @@ class TwitchMessageCollection(object):
         self.botId = bot['_id']
 
     def getNextMessageToSend(self):
-        return r.lpop("twtichMessageToSync")
+        return r.lpop("twtichMessageToSync" + str(self.botId))
         self.mongoDocument = mongoChat.find_one({
             "sent": False, "bot_id": ObjectId(self.botId),
             "date": {
