@@ -17,6 +17,8 @@ from twitchtube.youtube.YoutubeChatSender import YoutubeChatSender
 from twitchtube.youtube.YoutubeChatSaver import YoutubeChatSaver
 from twitchtube.youtube.YoutubePointManager import YoutubePointManager
 
+from twitchtube.util.TimersManager import TimersManager
+
 from youtubelivestreaming.live_broadcasts import get_live_broadcasts
 from helpers import get_authenticated_service
 #endlocalfiles
@@ -55,6 +57,11 @@ def startUp(bot, youtube, youtube2):
         threads.append(thread)
 
         tubeToTwitch = TwitchChatSender(socketToPass,run_event, bot)
+
+        #subs
+        timerManager = TimersManager(bot, db)
+        tubeToTwitch.register(timerManager)
+
         thread = threading.Thread(target=tubeToTwitch.work, args=())
         thread.daemon = True
         thread.start()
@@ -74,6 +81,8 @@ def startUp(bot, youtube, youtube2):
         # Subs
         # youtubePointManager = YoutubePointManager(youtube)
         # twitchToYoutube.register(youtubePointManager)
+        timerManager = TimersManager(bot, db)
+        twitchToYoutube.register(timerManager)
 
         thread = threading.Thread(target=twitchToYoutube.run, args=(run_event,))
         thread.daemon = True

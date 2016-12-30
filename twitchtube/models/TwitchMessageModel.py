@@ -6,8 +6,12 @@ import redis
 r = redis.StrictRedis()
 
 class TwitchMessageModel(object):
-    def __init__(self, author, text, youtubeId, botId):
-        self.message = "(From YouTube) " + author + ": " + text
+    def __init__(self, author, text, youtubeId, botId, addFromYoutube=True):
+        self.message = "";
+        if (addFromYoutube):
+            self.message += "(From YouTube) "
+        self.message += author + ": " + text
+
         self.youtubeId = youtubeId
         self.author = author
         self.botId = botId
