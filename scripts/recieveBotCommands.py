@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import json
 import os
+import psutil
 import signal
 from time import sleep
 
@@ -26,13 +27,26 @@ def applyActionToBot(botId, action):
     print(botStartScript, flush=True)
     os.system(botStartScript)
 
+def memoryUsageIsBelowThreshold():
+    memory = psutil.virtual_memory()
+    used = memory[3]
+    total = memory[0]
+    percentUsed = (used/total) * 100
+    return percentUsed < 60
+
 while 1:
-    queue = r.lpop(reddisBotCommandQueue)
 
-    if queue is not None:
-        command = json.loads(queue.decode())
-        botId = command['botId']
-        action = command['status']
-        applyActionToBot(botId, action)
+    if memoryUsageIsBelowThreshold() == False:
+        print("CPU memory usage is too high")
+        sleep(1)
 
-    sleep(.5)
+    else:
+        queue = r.lpop(reddisBotCommandQueue)
+
+        if queue is not None:
+            command = json.loads(queue.decode())
+            botId = command['botId']
+            action = command['status']
+            applyActionToBot(botId, action)
+
+        sleep(.5)
