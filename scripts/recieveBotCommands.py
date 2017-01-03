@@ -13,7 +13,8 @@ import config
 queueName = config.rabbitQueue
 
 import redis
-r = redis.StrictRedis()
+# r = redis.StrictRedis()
+r = redis.from_url(config.redisURL)
 reddisBotCommandQueue = config.reddisBotCommandQueue
 
 def applyActionToBot(botId, action):

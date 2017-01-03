@@ -2,7 +2,10 @@ import datetime
 import json
 
 import redis
-r = redis.StrictRedis()
+# r = redis.StrictRedis()
+
+import config
+r = redis.from_url(config.redisURL)
 
 class YoutubeMessageModel(object):
     def __init__(self, author, text, bot, addFromTwitch = True):

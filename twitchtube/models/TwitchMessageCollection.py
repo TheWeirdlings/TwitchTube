@@ -9,7 +9,10 @@ from bson.objectid import ObjectId
 # mongoChat = db.twitchMessages
 
 import redis
-r = redis.StrictRedis()
+# r = redis.StrictRedis()
+
+import config
+r = redis.from_url(config.redisURL)
 
 class TwitchMessageCollection(object):
     def __init__(self, bot):

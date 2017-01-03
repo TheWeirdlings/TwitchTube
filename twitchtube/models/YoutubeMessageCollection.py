@@ -8,7 +8,10 @@ from pymongo import MongoClient
 # mongoYTChat = db.youtubeMessages
 
 import redis
-r = redis.StrictRedis()
+# r = redis.StrictRedis()
+
+import config
+r = redis.from_url(config.redisURL)
 
 class YoutubeMessageCollection(object):
     def __init__(self, bot):

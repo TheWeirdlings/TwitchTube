@@ -3,7 +3,10 @@ from bson.objectid import ObjectId
 import json
 
 import redis
-r = redis.StrictRedis()
+# r = redis.StrictRedis()
+
+import config
+r = redis.from_url(config.redisURL)
 
 class TwitchMessageModel(object):
     def __init__(self, author, text, youtubeId, botId, addFromYoutube=True):
