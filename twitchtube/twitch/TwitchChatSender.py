@@ -88,6 +88,9 @@ class TwitchChatSender(object):
             return
 
         chatToSend = json.loads(chatToSend.decode())
+
+        if chatToSend['author'] == 'Twitchtube':
+            return
         self.sendTwitchMessge(chatToSend['message'])
 
     def work(self):

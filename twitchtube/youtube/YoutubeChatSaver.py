@@ -31,7 +31,7 @@ class YoutubeChatSaver(object):
 
             username = message['authorDetails']['displayName']
             messagecontent = message['snippet']['displayMessage']
-            messageToSave = TwitchMessageModel(username, messagecontent, message['id'], self.botId)
+            messageToSave = TwitchMessageModel(username, messagecontent, message['id'], self.bot)
 
             # Confirm that we have a new message
             messagePublishedDate = message['snippet']['publishedAt']
