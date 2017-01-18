@@ -13,6 +13,9 @@ class YoutubeMessageModel(object):
 
         self.author = author
 
+        if ("options" in bot and "displayFromMessages" in bot['options'] and bot['options']['displayFromMessages'] == False):
+            addFromTwitch = False
+
         message = ""
         if (addFromTwitch):
             message = twitchFromPrefix + " "
