@@ -25,7 +25,7 @@ class TimersManager(object):
                 for timerMessage in self.timers[currentMinute]:
                     # @TODO: We need some generic way to send to all chat streams
                     # @TODO: remove from youtube here, since this is from us
-                    messageToSave = TwitchMessageModel('', timerMessage, None, self.botId, False)
+                    messageToSave = TwitchMessageModel('', timerMessage, None, self.bot, False)
                     messageToSave.save()
 
                     # @TODO Abstract Author to constant
