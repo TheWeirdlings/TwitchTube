@@ -12,6 +12,7 @@ import logging
 import config
 from twitchtube.twitch.TwitchChatSaver import TwitchChatSaver
 from twitchtube.twitch.TwitchChatSender import TwitchChatSender
+from twitchtube.twitch.FollowerManager import FollowerManager
 
 from twitchtube.youtube.YoutubeChatSender import YoutubeChatSender
 from twitchtube.youtube.YoutubeChatSaver import YoutubeChatSaver
@@ -21,6 +22,8 @@ from twitchtube.util.TimersManager import TimersManager
 
 from youtubelivestreaming.live_broadcasts import get_live_broadcasts
 from helpers import get_authenticated_service
+
+from TwitchPythonApi.twitch_api import TwitchApi
 #endlocalfiles
 
 client = MongoClient(config.mongoUrl)
@@ -57,10 +60,13 @@ def startUp(bot, youtube, youtube2):
         threads.append(thread)
 
         tubeToTwitch = TwitchChatSender(socketToPass,run_event, bot)
+        twitchApi = TwitchApi()
+        followManager = FollowerManager(bot, db, twitchApi)
 
         #subs
         timerManager = TimersManager(bot, db)
         tubeToTwitch.register(timerManager)
+        tubeToTwitch.register(followManager)
 
         thread = threading.Thread(target=tubeToTwitch.work, args=())
         thread.daemon = True

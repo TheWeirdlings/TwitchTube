@@ -8,6 +8,7 @@ from tests.models.test_YoutubeMessageModel import YoutubeMessageModelTestCase
 # from tests.models.test_YoutubeMessageCollection import YoutubeMessageCollectionTestCase
 
 # from tests.twitch.test_TwitchChatSender import TwitchChatSenderTestCase
+from tests.twitch.test_FollowerManager import FollowerManagerTestCase
 
 if __name__ == '__main__':
     unittest.main()
