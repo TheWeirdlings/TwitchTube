@@ -26,13 +26,7 @@ class FollowerManagerTestCase(unittest.TestCase):
                     'twitchAlertText': self.twitchAlertText,
                 }
             }
-
-    # def tearDown(self):
-    #     mongoChat.delete_many({})
-
-    def test_sendsMessageAboutNewFollower(self):
-        twitchApi = TwitchApi()
-        twitchFollowerResponse = """
+        self.twitchFollowerResponse = """
             {
               "_total": 1234,
               "_links": {
@@ -64,10 +58,17 @@ class FollowerManagerTestCase(unittest.TestCase):
               ]
             }
             """
+
+    # def tearDown(self):
+    #     mongoChat.delete_many({})
+
+    def test_sendsMessageAboutNewFollower(self):
+        twitchApi = TwitchApi()
+
         followerTime = datetime.datetime.now()
         followerTime = followerTime + datetime.timedelta(0,10)
 
-        twitchFollowerResponse = twitchFollowerResponse.replace("[createdDate]", followerTime.isoformat())
+        twitchFollowerResponse = self.twitchFollowerResponse.replace("[createdDate]", followerTime.isoformat())
         twitchApi.getFollowers = MagicMock(return_value=twitchFollowerResponse)
 
         followerManager = FollowerManager(self.bot, None, twitchApi)
@@ -78,5 +79,36 @@ class FollowerManagerTestCase(unittest.TestCase):
 
         self.assertEqual(messageSaved['message'], ": " + self.twitchAlertText)
 
-    # def test_doesNotSendMessageWhenFollowerIsBeforeNow(self):
-    # def test_doesNotSendMessageWhenBotHasFollowMessageDisabled(self):
+    def test_doesNotSendMessageWhenFollowerIsBeforeNow(self):
+        twitchApi = TwitchApi()
+
+        followerTime = datetime.datetime.now()
+        followerTime = followerTime + datetime.timedelta(0, -10)
+
+        twitchFollowerResponse = self.twitchFollowerResponse.replace("[createdDate]", followerTime.isoformat())
+        twitchApi.getFollowers = MagicMock(return_value=twitchFollowerResponse)
+
+        followerManager = FollowerManager(self.bot, None, twitchApi)
+        followerManager.exectute()
+
+        messageSaved = r.lpop("twtichMessageToSync" + str(self.testId))
+
+        self.assertFalse(messageSaved)
+
+    def test_doesNotSendMessageWhenBotHasFollowMessageDisabled(self):
+        twitchApi = TwitchApi()
+
+        followerTime = datetime.datetime.now()
+        followerTime = followerTime + datetime.timedelta(0, 10)
+
+        twitchFollowerResponse = self.twitchFollowerResponse.replace("[createdDate]", followerTime.isoformat())
+        twitchApi.getFollowers = MagicMock(return_value=twitchFollowerResponse)
+
+        self.bot['twitchOptions']['displayTwitchAlerts'] = False
+
+        followerManager = FollowerManager(self.bot, None, twitchApi)
+        followerManager.exectute()
+
+        messageSaved = r.lpop("twtichMessageToSync" + str(self.testId))
+        
+        self.assertFalse(messageSaved)
