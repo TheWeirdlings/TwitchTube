@@ -14,7 +14,7 @@ class FollowerManager(object):
         self.twitchApi = twitchApi
 
         self.lastMinuteCheckedForFollowers = None
-        self.lastTimeFollowerAlerted = datetime.datetime.now()
+        self.lastTimeFollowerAlerted = datetime.datetime.now(pytz.UTC)
         self.twitchChannel = self.bot['twitch']
         self.twitchFollowerCursor = None
 
@@ -42,6 +42,7 @@ class FollowerManager(object):
 
             for follower in followers['follows']:
                 followerDate = parser.parse(follower['created_at'])
+
                 if followerDate > self.lastTimeFollowerAlerted:
                     followerDisplayName = follower['user']['display_name']
 
