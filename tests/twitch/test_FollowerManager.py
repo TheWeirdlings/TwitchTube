@@ -110,5 +110,24 @@ class FollowerManagerTestCase(unittest.TestCase):
         followerManager.exectute()
 
         messageSaved = r.lpop("twtichMessageToSync" + str(self.testId))
-        
+
         self.assertFalse(messageSaved)
+
+    def test_sendsThankYouMessageToFollower(self):
+        twitchApi = TwitchApi()
+
+        followerTime = datetime.datetime.now()
+        followerTime = followerTime + datetime.timedelta(0,10)
+
+        twitchFollowerResponse = self.twitchFollowerResponse.replace("[createdDate]", followerTime.isoformat())
+        twitchApi.getFollowers = MagicMock(return_value=twitchFollowerResponse)
+
+        self.bot['twitchOptions']['thankFollowers'] = True
+
+        followerManager = FollowerManager(self.bot, None, twitchApi)
+        followerManager.exectute()
+
+        messageSaved = r.lpop("twtichMessageToSync" + str(self.testId))
+        messageSaved = json.loads(messageSaved.decode())
+
+        self.assertEqual(messageSaved['message'], ": Thanks for following, @test_user2!")
