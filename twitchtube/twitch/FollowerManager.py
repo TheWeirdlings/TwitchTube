@@ -52,7 +52,7 @@ class FollowerManager(object):
                     messageToSave = TwitchMessageModel('', newFollerMessage, None, self.bot, False)
                     messageToSave.save()
 
-                    if ('thankFollowers' in self.bot['twitchOptions'] and self.bot['twitchOptions']['thankFollowers']):
+                    if ('thankNewFollowers' in self.bot['twitchOptions'] and self.bot['twitchOptions']['thankNewFollowers']):
                         thankfollowerMessage = 'Thanks for following, @' + follower['user']['display_name'] + '!'
                         messageToSave = TwitchMessageModel('', thankfollowerMessage, None, self.bot, False)
                         messageToSave.save()

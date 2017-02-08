@@ -122,7 +122,7 @@ class FollowerManagerTestCase(unittest.TestCase):
         twitchFollowerResponse = self.twitchFollowerResponse.replace("[createdDate]", followerTime.isoformat())
         twitchApi.getFollowers = MagicMock(return_value=twitchFollowerResponse)
 
-        self.bot['twitchOptions']['thankFollowers'] = True
+        self.bot['twitchOptions']['thankNewFollowers'] = True
 
         followerManager = FollowerManager(self.bot, None, twitchApi)
         followerManager.exectute()
