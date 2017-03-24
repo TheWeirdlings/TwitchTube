@@ -10,5 +10,7 @@ from tests.models.test_YoutubeMessageModel import YoutubeMessageModelTestCase
 # from tests.twitch.test_TwitchChatSender import TwitchChatSenderTestCase
 from tests.twitch.test_FollowerManager import FollowerManagerTestCase
 
+from tests.utils.test_EmojiAssigner import EmojiAssignerTestCase
+
 if __name__ == '__main__':
     unittest.main()

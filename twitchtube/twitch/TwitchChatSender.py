@@ -5,6 +5,7 @@ import json
 
 from TwitchPythonApi.twitch_api import TwitchApi
 from twitchtube.models.TwitchMessageCollection import TwitchMessageCollection
+from twitchtube.util.EmojiAssigner import EmojiAssigner
 
 # from userActionsManager import UserActionsManager
 
@@ -18,6 +19,7 @@ class TwitchChatSender(object):
         self.s = inSocket
         self.run_event = run_event
         self.bot = bot
+        self.emojiAssigner = EmojiAssigner(bot)
 
     def register(self, subscriber):
         self.subscribers.append(subscriber)
@@ -42,7 +44,14 @@ class TwitchChatSender(object):
         if chatToSend['author'] == 'Twitchtube':
             return
 
-        self.sendTwitchMessge(chatToSend['message'])
+        message = chatToSend['message']
+
+        emoji = self.emojiAssigner.getEmojiForUser(chatToSend['author'])
+        print( emoji.decode("utf-8"), flush=True)
+        # if (emoji is not None):
+        #     message = emoji + " " + message
+
+        self.sendTwitchMessge(message)
 
     def work(self):
         while self.run_event.is_set():
