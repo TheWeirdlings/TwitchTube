@@ -36,8 +36,8 @@ def memoryUsageIsBelowThreshold():
 
 while 1:
 
-    if memoryUsageIsBelowThreshold() == False:
-        print("CPU memory usage is too high")
+    if memoryUsageIsBelowThreshold() == True:
+        print("CPU memory usage is too high", flush=True)
         sleep(1)
 
     else:

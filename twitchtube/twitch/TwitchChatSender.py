@@ -46,10 +46,10 @@ class TwitchChatSender(object):
 
         message = chatToSend['message']
 
-        emoji = self.emojiAssigner.getEmojiForUser(chatToSend['author'])
-        print( emoji.decode("utf-8"), flush=True)
-        # if (emoji is not None):
-        #     message = emoji + " " + message
+        if 'twitchOptions' in self.bot and 'assignEmojis' in self.bot['twitchOptions'] and self.bot['twitchOptions']['assignEmojis'] is True:
+            emoji = self.emojiAssigner.getEmojiForUser(chatToSend['author'])
+            if emoji is not None:
+                message = emoji + " " + message
 
         self.sendTwitchMessge(message)
 

@@ -9,6 +9,9 @@ from twitchtube.models.TwitchMessageModel import TwitchMessageModel
 from twitchtube.models.YoutubeMessageModel import YoutubeMessageModel
 from twitchtube.util.CommandManager import CommandManager
 
+import redis
+r = redis.from_url(config.redisURL)
+
 import json
 
 class YoutubeChatSaver(object):
@@ -16,9 +19,15 @@ class YoutubeChatSaver(object):
         self.youtubeAuth = youtubeAuth
         self.bot = bot
         self.botId = bot['_id']
+        self.botIdString = str(self.botId)
         self.livechat_id = bot['youtube']
         # @TODO: Store this and load from redis
         self.lastSyncedMessageDate = datetime.now(timezone.utc)
+        redisStoredSyncDate = r.get(self.botIdString + "-lastSyncedMessageDate")
+
+        if redisStoredSyncDate is not None:
+            self.lastSyncedMessageDate = parser.parse(redisStoredSyncDate)
+
         self.nextPageToken = None;
         self.commandManager = CommandManager(db, bot)
 
@@ -40,6 +49,7 @@ class YoutubeChatSaver(object):
             if self.lastSyncedMessageDate < messagePublishedDate:
                 messageToSave.save()
                 self.lastSyncedMessageDate = messagePublishedDate
+                r.set(self.botIdString + "-lastSyncedMessageDate", self.lastSyncedMessageDate.isoformat())
 
                 #check commands
                 commandMessage = self.commandManager.checkForCommands(messagecontent, username)
