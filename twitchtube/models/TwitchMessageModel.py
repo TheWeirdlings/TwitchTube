@@ -1,57 +1,47 @@
+'''Creates a Twitch message from another chat'''
 import datetime
-from bson.objectid import ObjectId
 import json
-
 import redis
-# r = redis.StrictRedis()
 
 import config
-r = redis.from_url(config.redisURL)
+REDIS = redis.from_url(config.redisURL)
 
 class TwitchMessageModel(object):
-    def __init__(self, author, text, youtubeId, bot, addFromYoutube=True):
-        self.message = "";
+    '''Creates a Twitch message from another chat'''
+    def __init__(self, author, text, youtube_id, bot, add_from_youtube=True):
+        self.message = ""
 
-        if ("options" in bot and "displayFromMessages" in bot['options'] and bot['options']['displayFromMessages'] == False):
-            addFromYoutube = False
+        options_exist = "options" in bot
+        if options_exist:
+            options = bot['options']
+        display_exist = options_exist and "displayFromMessages" in options
+        display_from_messages_disabled = display_exist and options['displayFromMessages'] is False
 
-        if (addFromYoutube):
+        if display_from_messages_disabled:
+            add_from_youtube = False
+
+        if add_from_youtube:
             self.message += "(From YouTube) "
 
         self.message += author + ": " + text
 
-        self.youtubeId = youtubeId
+        self.youtube_id = youtube_id
         self.author = author
         self.bot = bot
-        self.botId = self.bot['_id']
-
-    def getMessage(self):
-        return self.message
-
-    def toMongoObject(self):
-        # @TODO: We need to give this an id for this youtubeToTwitch
-        # We don't want to be sending youtube messages from all people
-        mongoMessage = {
-            "bot_id": ObjectId(self.botId),
-            "message": self.message,
-            "youtubeId": self.youtubeId,
-            "author": self.author,
-            "sent": False,
-            "date": datetime.datetime.utcnow()
-        }
-        return mongoMessage #For bulk { '$set': mongoMessage }
+        self.bot_id = str(self.bot['_id'])
 
     def save(self):
+        '''Saves the message to Redis'''
         time = datetime.datetime.utcnow()
 
         chat = {
-            "bot_id": str(self.botId),
+            "bot_id": self.bot_id,
             "message": self.message,
             "sent": False,
-            "youtubeId": self.youtubeId,
+            "youtubeId": self.youtube_id,
             "author": self.author,
             "date": time.isoformat(),
             "fromService": "twitch",
         }
 
-        r.lpush("twtichMessageToSync" + str(self.botId), json.dumps(chat))
+        REDIS.lpush("TwitchMessageToSync" + self.bot_id, json.dumps(chat))
