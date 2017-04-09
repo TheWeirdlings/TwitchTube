@@ -3,6 +3,7 @@
 
 import socket
 import cgi
+import redis
 
 import config
 from twitchtube.util.MLStripper import strip_tags
@@ -19,12 +20,14 @@ class TwitchChatSaverWorker(object):
         self.motd_count = False #We need to account for each motd for each channel
         self.channels = []
         self.channels_string = ''
+        self.bots = []
+        self.bots_hashed_by_channel = {}
         self.bot = {} #bot
         self.database = {}
         # self.command_manager = CommandManager(self.database, self.bot)
         self.channel_offset = 0
         self.irc_socket = None
-        self.redis = None
+        self.redis = redis.from_url(config.redisURL)
 
     def send_twitch_method(self, message, channel):
         '''Sends a message to the IRC socket'''
@@ -73,9 +76,13 @@ class TwitchChatSaverWorker(object):
         print(channel, flush=True)
         print(message, flush=True)
 
-        #@TOOD: This should be queue up as any message not just youtube
-        # youtube_message = YoutubeMessageModel(username, message, self.bot)
-        # youtube_message.save()
+        if '#' + channel not in self.bots_hashed_by_channel:
+            return
+        bot = self.bots_hashed_by_channel['#' + channel]
+
+        # @TODO: This should be queue up as any message not just youtube
+        youtube_message = YoutubeMessageModel(username, message, bot)
+        youtube_message.save()
 
         # command_message = self.command_manager.checkForCommands(message, username)
         # if command_message is None:
@@ -107,7 +114,6 @@ class TwitchChatSaverWorker(object):
         # ircUser = 'USER ' + config.NICK + ' 0 * :' + config.USER + '\r\n'
         # irc_socket.send(ircUser.encode('utf-8'))
 
-        # irc_send_string = "JOIN #" + self.bot['twitch'] + " \r\n"
         irc_send_string = "JOIN " + self.channels_string + " \r\n"
         irc_socket.send(irc_send_string.encode('utf-8'))
 
@@ -117,12 +123,25 @@ class TwitchChatSaverWorker(object):
         '''Get all Twitch channels in redis queue'''
         begin_index = self.channel_offset * 50
         end_index = self.channel_offset * 50 - 1
+        self.bots = self.redis.lrange('TwitchtubeBots', begin_index, end_index)
+
         self.channels = ['#thehollidayinn', '#themisterholliday']
+        self.bots_hashed_by_channel['#thehollidayinn'] = {
+            '_id': "58649647731dd118dc3c0b72"
+        }
+
+        for bot in self.bots:
+            if bot['active']:
+                self.channels.append(bot['twitch'])
+
         self.channels_string = ','.join(self.channels)
-        #self.redis.lrange('twitchChannels', begin_index, end_index)
+
 
     def start(self):
         '''Start the Worker'''
+
+        # @TODO: Add offset acceptor
+        # @TODO: Add check for bots becoming active
 
         self.get_channels()
         self.connect_to_channels()
