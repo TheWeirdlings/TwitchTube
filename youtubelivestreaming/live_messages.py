@@ -12,6 +12,8 @@ def insert_message(youtube, live_chat_id, message):
         )
     ).execute()
 
+    return list_streams_request
+
 def list_messages(youtube, live_chat_id, pageToken=None):
     if (pageToken):
         list_broadcasts_request = youtube.liveChatMessages().list(

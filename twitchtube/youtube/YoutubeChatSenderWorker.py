@@ -1,6 +1,6 @@
 '''Reads messages queue on the Redis server and sends to
 the correct Youtube channel'''
-
+import sys
 from time import sleep
 import json
 import redis
@@ -52,7 +52,10 @@ class YoutubeChatSenderWorker(object):
 
         livechat_id = self.bots_hashed_by_id[bot_id]['youtube']
 
-        live_messages.insert_message(self.youtube_auth, livechat_id, chat_to_send['message'])
+        try:
+            live_messages.insert_message(self.youtube_auth, livechat_id, chat_to_send['message'])
+        except:
+            print("Unexpected error:" + sys.exc_info()[0], flush=True)
 
     def get_bots(self):
         '''Gets active bots from redis and creates a hash so we can access
@@ -68,13 +71,14 @@ class YoutubeChatSenderWorker(object):
                 }
 
         self.bots_hashed_by_id['58649647731dd118dc3c0b72'] = {
-            'youtube': "EiEKGFVDOWZZcVduaVhtVjNTNVVoRVdyb2pJdxIFL2xpdmU"
+            'youtube': "EiEKGFVDYzZrWmItSzZJdnBvaEl5SWJMLVZRQRIFL2xpdmU"
         }
 
     def start(self):
         '''Starts the worker and keeps it running'''
 
         # @TODO: Add offset acceptor
+        self.get_bots()
 
         while True:
             # self.notifiy_subscribers()
