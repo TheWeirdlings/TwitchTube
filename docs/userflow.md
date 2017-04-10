@@ -7,8 +7,9 @@ with technicall descriptions is as follows:
   2. User links both Twtich and Youtube
   3. User hits start button
   4. CommandWorker listens for start command
-  5. CommandWorker creates entry in TwtichtubeBots for new bot and sets to active
-  6. CommandWorker creates entry in TwitchtubeBotsHashedById and sets index in TwitchtubeBots 
+  5. CommandWorker finds bot in Mongodb
+  6. CommandWorker creates entry in TwtichtubeBots for new bot and sets to active
+  7. CommandWorker creates entry in TwitchtubeBotsHashedById and sets index in TwitchtubeBots 
   for Youtube Sender (this most effiecient bot) and Stoping with CommandWorker (See below)
 
 ## Stopping
