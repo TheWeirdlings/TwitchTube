@@ -4,6 +4,7 @@
 import socket
 import cgi
 import redis
+import json
 
 import config
 from twitchtube.util.MLStripper import strip_tags
@@ -131,8 +132,9 @@ class TwitchChatSaverWorker(object):
         }
 
         for bot in self.bots:
-            if bot['active']:
-                self.channels.append(bot['twitch'])
+            bot_parsed = json.loads(bot.decode())
+            if bot_parsed['active']:
+                self.channels.append(bot_parsed['twitch'])
 
         self.channels_string = ','.join(self.channels)
 
