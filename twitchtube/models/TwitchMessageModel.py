@@ -44,4 +44,5 @@ class TwitchMessageModel(object):
             "fromService": "twitch",
         }
 
+        # @TODO: Ensure this is added to the back
         REDIS.lpush("TwitchMessageToSync", json.dumps(chat))

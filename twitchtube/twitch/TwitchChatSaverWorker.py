@@ -2,6 +2,7 @@
     and saves the chats in a Redis queue to be processes'''
 
 import socket
+from datetime import datetime, timezone
 import cgi
 import redis
 import json
@@ -29,6 +30,7 @@ class TwitchChatSaverWorker(object):
         self.channel_offset = 0
         self.irc_socket = None
         self.redis = redis.from_url(config.redisURL)
+        self.last_update_check = datetime.now(timezone.utc)
 
     def send_twitch_method(self, message, channel):
         '''Sends a message to the IRC socket'''
@@ -94,7 +96,11 @@ class TwitchChatSaverWorker(object):
 
     def read_socket(self):
         '''Listens to messages coming from the irc socket'''
-        self.readbuffer = self.readbuffer + self.irc_socket.recv(1024).decode()
+        self.irc_socket.settimeout(10)
+        try:
+            self.readbuffer = self.readbuffer + self.irc_socket.recv(1024).decode()
+        except:
+            return
         temp = self.readbuffer.split("\n")
         self.readbuffer = temp.pop()
 
@@ -126,10 +132,7 @@ class TwitchChatSaverWorker(object):
         end_index = self.channel_offset * 50 - 1
         self.bots = self.redis.lrange('TwitchtubeBots', begin_index, end_index)
 
-        self.channels = ['#thehollidayinn', '#themisterholliday']
-        self.bots_hashed_by_channel['#thehollidayinn'] = {
-            '_id': "58649647731dd118dc3c0b72"
-        }
+        self.channels = []
 
         for bot in self.bots:
             bot_parsed = json.loads(bot.decode())
@@ -149,4 +152,14 @@ class TwitchChatSaverWorker(object):
         self.connect_to_channels()
 
         while True:
+            now = datetime.now(timezone.utc)
+            seconds_since_last_update = (now - self.last_update_check).total_seconds()
+
+            if seconds_since_last_update >= 10:
+                # @TODO: IT would be better to poll udpates and leave/join new channels
+                # @TODO We need to use a separate thread here
+                self.get_channels()
+                self.connect_to_channels()
+                self.last_update_check = now
+
             self.read_socket()
