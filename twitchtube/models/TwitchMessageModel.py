@@ -44,4 +44,4 @@ class TwitchMessageModel(object):
             "fromService": "twitch",
         }
 
-        REDIS.lpush("TwitchMessageToSync" + self.bot_id, json.dumps(chat))
+        REDIS.lpush("TwitchMessageToSync", json.dumps(chat))
