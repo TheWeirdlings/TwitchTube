@@ -13,10 +13,11 @@ from twitchtube.util.CommandManager import CommandManager
 
 class YoutubeChatSaverWorker(object):
     '''Listens to Youtube channels and saves the chat'''
-    def __init__(self, youtube_auth):
+    def __init__(self, youtube_auth, channel_offset=0):
         self.redis = redis.from_url(config.redisURL)
         self.youtube_auth = youtube_auth
-        self.channel_offset = 0
+        self.channel_offset = channel_offset
+        self.max_channel = 50
         self.bots = []
         self.botsToGrab = []
         self.bot_info = {}
@@ -93,8 +94,8 @@ class YoutubeChatSaverWorker(object):
     def get_bots(self):
         '''Gets active bots from redis and creates a hash so we can access
         their live chat ids'''
-        begin_index = self.channel_offset * 50
-        end_index = self.channel_offset * 50 - 1
+        begin_index = self.channel_offset * self.max_channel
+        end_index = self.max_channel + (self.channel_offset * self.max_channel) - 1
         self.bots = self.redis.lrange('TwitchtubeBots', begin_index, end_index)
         self.botsToGrab = []
 

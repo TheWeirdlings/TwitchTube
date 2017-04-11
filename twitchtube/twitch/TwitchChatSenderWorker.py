@@ -14,14 +14,15 @@ from twitchtube.util.EmojiAssigner import EmojiAssigner
 class TwitchChatSenderWorker(object):
     '''This class grabs and chats that are queued for twitch and
     send them to the twitch channel associated with the bot'''
-    def __init__(self):
+    def __init__(self, channel_offset=0):
         self.subscribers = []
         self.bots = []
         self.bots_by_bot_id = {}
         self.channels = []
         self.channels_string = ''
         self.irc_socket = None
-        self.channel_offset = 0
+        self.channel_offset = channel_offset
+        self.max_channel = 50
         self.redis = redis.from_url(config.redisURL)
         self.twitch_collection = TwitchMessageCollection()
         self.last_update_check = datetime.now(timezone.utc)
@@ -104,8 +105,8 @@ class TwitchChatSenderWorker(object):
 
     def get_channels(self):
         '''Get all Twitch channels in redis queue'''
-        begin_index = self.channel_offset * 50
-        end_index = self.channel_offset * 50 - 1
+        begin_index = self.channel_offset * self.max_channel
+        end_index = self.max_channel + (self.channel_offset * self.max_channel) - 1
         self.bots = self.redis.lrange('TwitchtubeBots', begin_index, end_index)
         self.bots_by_bot_id = {}
         self.channels = []
@@ -121,10 +122,6 @@ class TwitchChatSenderWorker(object):
 
     def start(self):
         '''Start the Worker'''
-
-        # @TODO: Add offset acceptor
-        # @TODO: Add check for bots becoming active
-
         self.get_channels()
         self.connect_to_channels()
 
@@ -133,7 +130,6 @@ class TwitchChatSenderWorker(object):
             seconds_since_last_update = (now - self.last_update_check).total_seconds()
 
             if seconds_since_last_update >= 10:
-                print("Updated", flush=True)
                 self.get_channels()
                 self.last_update_check = now
 

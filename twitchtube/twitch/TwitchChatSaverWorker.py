@@ -29,6 +29,7 @@ class TwitchChatSaverWorker(object):
         self.database = {}
         # self.command_manager = CommandManager(self.database, self.bot)
         self.channel_offset = channel_offset
+        self.max_channel = 50
         self.irc_socket = None
         self.redis = redis.from_url(config.redisURL)
         self.last_update_check = datetime.now(timezone.utc)
@@ -136,8 +137,8 @@ class TwitchChatSaverWorker(object):
 
     def get_channels(self):
         '''Get all Twitch channels in redis queue'''
-        begin_index = self.channel_offset * 50
-        end_index = self.channel_offset * 50 - 1
+        begin_index = self.channel_offset * self.max_channel
+        end_index = self.max_channel + (self.channel_offset * self.max_channel) - 1
         self.bots = self.redis.lrange('TwitchtubeBots', begin_index, end_index)
 
         channels = []

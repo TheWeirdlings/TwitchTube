@@ -51,4 +51,4 @@ class YoutubeMessageModel(object):
             "fromService": "youtube",
         }
 
-        self.redis.lpush("YoutubeMessageToSync", json.dumps(chat))
+        self.redis.rpush("YoutubeMessageToSync", json.dumps(chat))
