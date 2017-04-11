@@ -188,12 +188,6 @@ class TwitchChatSaverWorker(object):
         '''Start the Worker'''
 
         channels = self.get_channels()
-        channels = ['#krh121791']
-        self.channels_string = ','.join(channels)
-        self.bots_hashed_by_channel['#krh121791'] = {
-            '_id': 'random',
-            'active': True
-        }
         if len(channels) > 0:
             self.channels.extend(channels)
             self.connect_to_channels()

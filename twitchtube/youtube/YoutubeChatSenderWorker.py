@@ -7,6 +7,7 @@ import redis
 
 import config
 from twitchtube.models.YoutubeMessageCollection import YoutubeMessageCollection
+from twitchtube.models.YoutubeMessageModel import YoutubeMessageModel
 from youtubelivestreaming import live_messages
 
 class YoutubeChatSenderWorker(object):
@@ -32,6 +33,16 @@ class YoutubeChatSenderWorker(object):
         for subscriber in self.subscribers:
             subscriber.execute()
 
+    def requeue_message(self, chat_to_send):
+        '''Adds a message back to the queue'''
+        username = chat_to_send['author']
+        message = chat_to_send['message']
+        bot = {
+            '_id': chat_to_send['bot_id']
+        }
+        youtube_message = YoutubeMessageModel(username, message, bot, False, True)
+        youtube_message.save()
+
     def send_next_message(self):
         '''Sends the next message from the Redis queue to Youtube'''
         chat_to_send = self.youtube_message_collection.get_next_message_to_send()
@@ -48,9 +59,13 @@ class YoutubeChatSenderWorker(object):
 
         cached_bot = self.redis.hget('TwitchtubeBotsById', bot_id)
         if cached_bot is None:
+            self.requeue_message(chat_to_send)
             return
 
-        cached_bot = json.loads(cached_bot)
+        cached_bot = json.loads(cached_bot.decode())
+        if not cached_bot['active']:
+            self.requeue_message(chat_to_send)
+            return
 
         livechat_id = cached_bot['youtube']
 

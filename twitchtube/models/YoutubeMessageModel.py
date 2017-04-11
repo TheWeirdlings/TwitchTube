@@ -10,7 +10,7 @@ class YoutubeMessageModel(object):
     '''A model of a message to be queue from on channel
     to Youtube'''
 
-    def __init__(self, author, text, bot, add_from_twitch=True):
+    def __init__(self, author, text, bot, add_from_twitch=True, useOnlyText=False):
         self.redis = redis.from_url(config.redisURL)
 
         twitch_from_prefix = "(From Twitch)"
@@ -30,7 +30,7 @@ class YoutubeMessageModel(object):
         if add_from_twitch:
             message = twitch_from_prefix + " "
 
-        if author:
+        if author and useOnlyText is not True:
             message = message + author + ": "
 
         self.message = message + text
