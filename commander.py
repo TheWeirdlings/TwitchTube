@@ -39,8 +39,9 @@ def twitchtube(bot, action):
         list_index = cached_bot['list_index']
         mongo_bot['active'] = True
         mongo_bot['_id'] = str(mongo_bot['_id'])
-        REDIS.hmset('TwitchtubeBotsById', {cached_bot['_id']: json.dumps(cached_bot)})
-        REDIS.lset('TwitchtubeBots', list_index - 1, json.dumps(cached_bot))
+        mongo_bot['list_index'] = list_index
+        REDIS.hmset('TwitchtubeBotsById', {mongo_bot['_id']: json.dumps(mongo_bot)})
+        REDIS.lset('TwitchtubeBots', list_index - 1, json.dumps(mongo_bot))
         click.echo("Started with update!")
 
     if action == 'stop':
@@ -56,6 +57,7 @@ def twitchtube(bot, action):
 
         REDIS.hmset('TwitchtubeBotsById', {cached_bot['_id']: json.dumps(cached_bot)})
         REDIS.lset('TwitchtubeBots', list_index - 1, json.dumps(cached_bot))
+        click.echo("Stopped")
 
 if __name__ == '__main__':
     twitchtube()

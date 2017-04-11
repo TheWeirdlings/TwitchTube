@@ -112,7 +112,6 @@ class YoutubeChatSaverWorker(object):
             seconds_since_last_update = (now - self.last_update_check).total_seconds()
 
             if seconds_since_last_update >= 10:
-                print("Updated", flush=True)
                 self.get_bots()
                 self.last_update_check = now
 
