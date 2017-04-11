@@ -7,6 +7,7 @@ import socket
 import redis
 
 import config
+from twitchtube.models.TwitchMessageModel import TwitchMessageModel
 from twitchtube.models.TwitchMessageCollection import TwitchMessageCollection
 from twitchtube.util.EmojiAssigner import EmojiAssigner
 
@@ -60,6 +61,19 @@ class TwitchChatSenderWorker(object):
 
         message = chat_to_send['message']
         bot_id = str(chat_to_send['bot_id'])
+
+        # Put it back, should make this more effiecient
+        if bot_id not in self.bots_by_bot_id:
+            author = chat_to_send['author']
+            text = chat_to_send['message']
+            youtube_id = chat_to_send['youtubeId']
+            bot = {
+                '_id': chat_to_send['bot_id']
+            }
+            twitch_message_model = TwitchMessageModel(author, text, youtube_id, bot, False, True)
+            twitch_message_model.save()
+            return
+
         channel = self.bots_by_bot_id[bot_id]['twitch']
 
         # if 'twitchOptions' in self.bot and 'assignEmojis' in self.bot['twitchOptions'] and self.bot['twitchOptions']['assignEmojis'] is True:
@@ -67,7 +81,7 @@ class TwitchChatSenderWorker(object):
         #     if emoji is not None:
         #         message = emoji + " " + message
 
-        self.send_twitch_messge(message, channel)
+        self.send_twitch_messge(message, "#" + channel)
 
     def connect_to_channels(self):
         '''Create a socket connection to Twitch IRC with all channels'''
@@ -97,13 +111,11 @@ class TwitchChatSenderWorker(object):
         self.channels = []
 
         for bot in self.bots:
-            cached_bot = json.loads(bot)
+            cached_bot = json.loads(bot.decode())
             if cached_bot['active']:
                 self.channels.append(cached_bot['twitch'])
-                self.bots_by_bot_id[cached_bot['_id']] = {
-                    '_id': cached_bot['_id'],
-                    'twitch': cached_bot['twitch']
-                }
+                bot_id = str(cached_bot['_id'])
+                self.bots_by_bot_id[bot_id] = cached_bot
 
         self.channels_string = ','.join(self.channels)
 

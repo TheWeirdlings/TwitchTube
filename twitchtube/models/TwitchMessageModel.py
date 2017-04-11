@@ -8,7 +8,7 @@ REDIS = redis.from_url(config.redisURL)
 
 class TwitchMessageModel(object):
     '''Creates a Twitch message from another chat'''
-    def __init__(self, author, text, youtube_id, bot, add_from_youtube=True):
+    def __init__(self, author, text, youtube_id, bot, add_from_youtube=True, useOnlyText=False):
         self.message = ""
 
         options_exist = "options" in bot
@@ -20,10 +20,13 @@ class TwitchMessageModel(object):
         if display_from_messages_disabled:
             add_from_youtube = False
 
-        if add_from_youtube:
+        if add_from_youtube and not useOnlyText:
             self.message += "(From YouTube) "
 
-        self.message += author + ": " + text
+        if useOnlyText is not True:
+            self.message += author + ": " + text
+        else:
+            self.message = text
 
         self.youtube_id = youtube_id
         self.author = author
@@ -45,4 +48,4 @@ class TwitchMessageModel(object):
         }
 
         # @TODO: Ensure this is added to the back
-        REDIS.lpush("TwitchMessageToSync", json.dumps(chat))
+        REDIS.rpush("TwitchMessageToSync", json.dumps(chat))
