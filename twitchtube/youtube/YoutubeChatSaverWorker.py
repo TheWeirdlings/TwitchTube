@@ -2,6 +2,7 @@
 from time import sleep
 from datetime import datetime, timezone
 from dateutil import parser
+import json
 import redis
 
 import config
@@ -17,7 +18,9 @@ class YoutubeChatSaverWorker(object):
         self.youtube_auth = youtube_auth
         self.channel_offset = 0
         self.bots = []
+        self.botsToGrab = []
         self.bot_info = {}
+        self.last_update_check = datetime.now(timezone.utc)
         # self.command_manager = CommandManager(db, bot)
 
     def save(self, messages, bot):
@@ -93,22 +96,27 @@ class YoutubeChatSaverWorker(object):
         begin_index = self.channel_offset * 50
         end_index = self.channel_offset * 50 - 1
         self.bots = self.redis.lrange('TwitchtubeBots', begin_index, end_index)
+        self.botsToGrab = []
 
-        # @TODO: filter for active
-
-        self.bots = [
-            {
-                '_id': '58649647731dd118dc3c0b72',
-                'youtube': "EiEKGFVDYzZrWmItSzZJdnBvaEl5SWJMLVZRQRIFL2xpdmU"
-            },
-        ]
+        for bot in self.bots:
+            bot_parsed = json.loads(bot.decode())
+            if bot_parsed['active']:
+                self.botsToGrab.append(bot_parsed)
 
     def start(self):
         '''Starts the worker and keeps it running'''
         self.get_bots()
 
         while True:
-            for bot in self.bots:
+            now = datetime.now(timezone.utc)
+            seconds_since_last_update = (now - self.last_update_check).total_seconds()
+
+            if seconds_since_last_update >= 10:
+                print("Updated", flush=True)
+                self.get_bots()
+                self.last_update_check = now
+
+            for bot in self.botsToGrab:
                 # Check if we are polling too soon
                 bot_id = str(bot['_id'])
                 if bot_id in self.bot_info and 'polling_interval_millis' in  self.bot_info[bot_id]:

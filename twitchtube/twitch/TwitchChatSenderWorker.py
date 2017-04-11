@@ -1,6 +1,6 @@
 '''This class grabs and chats that are queued for twitch and
     send them to the twitch channel associated with the bot'''
-
+from datetime import datetime, timezone
 from time import sleep
 import json
 import socket
@@ -23,7 +23,7 @@ class TwitchChatSenderWorker(object):
         self.channel_offset = 0
         self.redis = redis.from_url(config.redisURL)
         self.twitch_collection = TwitchMessageCollection()
-
+        self.last_update_check = datetime.now(timezone.utc)
         # self.emoji_assigner = EmojiAssigner(bot)
 
     # @TODO: Should be an interface
@@ -93,16 +93,17 @@ class TwitchChatSenderWorker(object):
         begin_index = self.channel_offset * 50
         end_index = self.channel_offset * 50 - 1
         self.bots = self.redis.lrange('TwitchtubeBots', begin_index, end_index)
-
-        self.channels = ['#thehollidayinn', '#themisterholliday']
-        self.bots_by_bot_id['58649647731dd118dc3c0b72'] = {
-            '_id': "58649647731dd118dc3c0b72",
-            'twitch': '#thehollidayinn'
-        }
+        self.bots_by_bot_id = {}
+        self.channels = []
 
         for bot in self.bots:
-            if bot['active']:
-                self.channels.append(bot['twitch'])
+            cached_bot = json.loads(bot)
+            if cached_bot['active']:
+                self.channels.append(cached_bot['twitch'])
+                self.bots_by_bot_id[cached_bot['_id']] = {
+                    '_id': cached_bot['_id'],
+                    'twitch': cached_bot['twitch']
+                }
 
         self.channels_string = ','.join(self.channels)
 
@@ -116,6 +117,14 @@ class TwitchChatSenderWorker(object):
         self.connect_to_channels()
 
         while True:
+            now = datetime.now(timezone.utc)
+            seconds_since_last_update = (now - self.last_update_check).total_seconds()
+
+            if seconds_since_last_update >= 10:
+                print("Updated", flush=True)
+                self.get_channels()
+                self.last_update_check = now
+
             self.send_message_from_queue()
             # self.notifySubscribers()
             sleep(1.5)

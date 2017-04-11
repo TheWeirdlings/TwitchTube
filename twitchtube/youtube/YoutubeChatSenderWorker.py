@@ -4,7 +4,6 @@ import sys
 from time import sleep
 import json
 import redis
-from bson.objectid import ObjectId
 
 import config
 from twitchtube.models.YoutubeMessageCollection import YoutubeMessageCollection
@@ -47,38 +46,21 @@ class YoutubeChatSenderWorker(object):
 
         bot_id = chat_to_send['bot_id']
 
-        if bot_id not in self.bots_hashed_by_id:
+        cached_bot = self.redis.hget('TwitchtubeBotsById', bot_id)
+        if cached_bot is None:
             return
 
-        livechat_id = self.bots_hashed_by_id[bot_id]['youtube']
+        cached_bot = json.loads(cached_bot)
+
+        livechat_id = cached_bot['youtube']
 
         try:
             live_messages.insert_message(self.youtube_auth, livechat_id, chat_to_send['message'])
         except:
             print("Unexpected error:" + sys.exc_info()[0], flush=True)
 
-    def get_bots(self):
-        '''Gets active bots from redis and creates a hash so we can access
-        their live chat ids'''
-        begin_index = self.channel_offset * 50
-        end_index = self.channel_offset * 50 - 1
-        self.bots = self.redis.lrange('TwitchtubeBots', begin_index, end_index)
-
-        for bot in self.bots:
-            if 'youtube' in bot:
-                self.bots_hashed_by_id[str(bot['_id'])] = {
-                    'youtube': bot['youtube']
-                }
-
-        self.bots_hashed_by_id['58649647731dd118dc3c0b72'] = {
-            'youtube': "EiEKGFVDYzZrWmItSzZJdnBvaEl5SWJMLVZRQRIFL2xpdmU"
-        }
-
     def start(self):
         '''Starts the worker and keeps it running'''
-
-        # @TODO: Add offset acceptor
-        self.get_bots()
 
         while True:
             # self.notifiy_subscribers()
