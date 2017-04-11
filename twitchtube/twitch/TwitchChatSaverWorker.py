@@ -4,8 +4,9 @@
 import socket
 from datetime import datetime, timezone
 import cgi
-import redis
 import json
+import redis
+import threading
 
 import config
 from twitchtube.util.MLStripper import strip_tags
@@ -16,7 +17,7 @@ class TwitchChatSaverWorker(object):
     '''A worker that connects to Twitch IRC for multiple channels
     and saves the chats in a Redis queue to be processes'''
 
-    def __init__(self):
+    def __init__(self, channel_offset=0):
         self.readbuffer = ""
         self.motd = False
         self.motd_count = False #We need to account for each motd for each channel
@@ -27,7 +28,7 @@ class TwitchChatSaverWorker(object):
         self.bot = {} #bot
         self.database = {}
         # self.command_manager = CommandManager(self.database, self.bot)
-        self.channel_offset = 0
+        self.channel_offset = channel_offset
         self.irc_socket = None
         self.redis = redis.from_url(config.redisURL)
         self.last_update_check = datetime.now(timezone.utc)
@@ -39,7 +40,6 @@ class TwitchChatSaverWorker(object):
 
     def parse_line(self, line):
         '''Parses a line from the IRC socket'''
-
         if "PING" in line:
             irc_pong = "PONG %s\r\n" % line[1]
             self.irc_socket.send(irc_pong.encode('utf-8'))
@@ -54,9 +54,10 @@ class TwitchChatSaverWorker(object):
         # Sets the username variable to the actual username
         usernamesplit = parts[1].split("!")
         username = usernamesplit[0]
+        channel = None
         if len(usernamesplit) > 1:
             channelsplit = usernamesplit[1].split('#')
-            channel = channelsplit[1].strip()
+            channel = '#' + channelsplit[1].strip()
 
         # Only works after twitch is done announcing stuff (MODT = Message of the day)
         if self.motd is False:
@@ -76,12 +77,15 @@ class TwitchChatSaverWorker(object):
         if message is None:
             return
 
-        print(channel, flush=True)
-        print(message, flush=True)
-
-        if '#' + channel not in self.bots_hashed_by_channel:
+        if channel is None:
             return
-        bot = self.bots_hashed_by_channel['#' + channel]
+
+        channel_exists = channel in self.bots_hashed_by_channel
+        channel_active = channel_exists and self.bots_hashed_by_channel[channel]['active']
+        if channel_active is False:
+            return
+
+        bot = self.bots_hashed_by_channel[channel]
 
         # @TODO: This should be queue up as any message not just youtube
         youtube_message = YoutubeMessageModel(username, message, bot)
@@ -92,11 +96,10 @@ class TwitchChatSaverWorker(object):
         #     return
 
         # @TODO: Should we queue up a message instead?
-        # self.send_twitch_method(command_message)
+        # self.send_twitch_method(command_message, channel)
 
     def read_socket(self):
         '''Listens to messages coming from the irc socket'''
-        self.irc_socket.settimeout(10)
         try:
             self.readbuffer = self.readbuffer + self.irc_socket.recv(1024).decode()
         except:
@@ -126,40 +129,80 @@ class TwitchChatSaverWorker(object):
 
         self.irc_socket = irc_socket
 
+    def connect_to_new_channels(self):
+        '''Uses existing socket to connect to IRC'''
+        irc_send_string = "JOIN " + self.channels_string + " \r\n"
+        self.irc_socket.send(irc_send_string.encode('utf-8'))
+
     def get_channels(self):
         '''Get all Twitch channels in redis queue'''
         begin_index = self.channel_offset * 50
         end_index = self.channel_offset * 50 - 1
         self.bots = self.redis.lrange('TwitchtubeBots', begin_index, end_index)
 
-        self.channels = []
+        channels = []
 
         for bot in self.bots:
             bot_parsed = json.loads(bot.decode())
-            if bot_parsed['active']:
-                self.channels.append(bot_parsed['twitch'])
+            channel = '#' + bot_parsed['twitch']
+            bot_active = bot_parsed['active']
 
-        self.channels_string = ','.join(self.channels)
+            # if we haven't joined the channel, add it
+            channel_doesnt_exist = bot_active and channel not in self.bots_hashed_by_channel
+            if channel_doesnt_exist:
+                channels.append(channel)
+                self.bots_hashed_by_channel[channel] = bot_parsed
 
+            # Update status if we have already joined
+            channel_exists = channel in self.bots_hashed_by_channel
+            channel_became_active = channel_exists and self.bots_hashed_by_channel[channel]['active'] is False
+            channel_became_active = channel_became_active and bot_active
+            if channel_became_active:
+                self.bots_hashed_by_channel[channel]['active'] = True
 
-    def start(self):
-        '''Start the Worker'''
+            # Channel became inactive
+            channel_became_inactive = channel_exists and self.bots_hashed_by_channel[channel]['active'] is True
+            channel_became_inactive = channel_became_inactive and bot_active is False
+            if channel_became_inactive:
+                self.bots_hashed_by_channel[channel]['active'] = False
 
-        # @TODO: Add offset acceptor
-        # @TODO: Add check for bots becoming active
+        self.channels_string = ','.join(channels)
+        return channels
 
-        self.get_channels()
-        self.connect_to_channels()
-
+    def check_for_updates(self):
+        '''A function to use a separate thread
+        that checks for channel updates'''
         while True:
             now = datetime.now(timezone.utc)
             seconds_since_last_update = (now - self.last_update_check).total_seconds()
 
             if seconds_since_last_update >= 10:
-                # @TODO: IT would be better to poll udpates and leave/join new channels
-                # @TODO We need to use a separate thread here
-                self.get_channels()
-                self.connect_to_channels()
+                channels = self.get_channels()
+                if len(channels) > 0:
+                    self.channels.extend(channels)
+                    self.motd = False
+                    self.connect_to_new_channels()
                 self.last_update_check = now
 
+    def start(self):
+        '''Start the Worker'''
+
+        channels = self.get_channels()
+        channels = ['#krh121791']
+        self.channels_string = ','.join(channels)
+        self.bots_hashed_by_channel['#krh121791'] = {
+            '_id': 'random',
+            'active': True
+        }
+        if len(channels) > 0:
+            self.channels.extend(channels)
+            self.connect_to_channels()
+
+        # @TODO: Add offset acceptor
+
+        thread = threading.Thread(target=self.check_for_updates, args=())
+        thread.daemon = True
+        thread.start()
+
+        while True:
             self.read_socket()
