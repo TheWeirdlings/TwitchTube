@@ -154,18 +154,18 @@ class TwitchChatSaverWorker(object):
                 channels.append(channel)
                 self.bots_hashed_by_channel[channel] = bot_parsed
 
-            # Update status if we have already joined
+            # Update full bot if we have already joined
             channel_exists = channel in self.bots_hashed_by_channel
             channel_became_active = channel_exists and self.bots_hashed_by_channel[channel]['active'] is False
             channel_became_active = channel_became_active and bot_active
             if channel_became_active:
-                self.bots_hashed_by_channel[channel]['active'] = True
+                self.bots_hashed_by_channel[channel]['active'] = bot_parsed 
 
             # Channel became inactive
             channel_became_inactive = channel_exists and self.bots_hashed_by_channel[channel]['active'] is True
             channel_became_inactive = channel_became_inactive and bot_active is False
             if channel_became_inactive:
-                self.bots_hashed_by_channel[channel]['active'] = False
+                self.bots_hashed_by_channel[channel]['active'] = bot_parsed
 
         self.channels_string = ','.join(channels)
         return channels

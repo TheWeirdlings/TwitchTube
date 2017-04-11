@@ -26,7 +26,7 @@ class TwitchChatSenderWorker(object):
         self.redis = redis.from_url(config.redisURL)
         self.twitch_collection = TwitchMessageCollection()
         self.last_update_check = datetime.now(timezone.utc)
-        # self.emoji_assigner = EmojiAssigner(bot)
+        self.emoji_assigner = EmojiAssigner()
 
     # @TODO: Should be an interface
     def register(self, subscriber):
@@ -77,10 +77,16 @@ class TwitchChatSenderWorker(object):
 
         channel = self.bots_by_bot_id[bot_id]['twitch']
 
-        # if 'twitchOptions' in self.bot and 'assignEmojis' in self.bot['twitchOptions'] and self.bot['twitchOptions']['assignEmojis'] is True:
-        #     emoji = self.emojiAssigner.getEmojiForUser(chatToSend['author'])
-        #     if emoji is not None:
-        #         message = emoji + " " + message
+        bot = self.bots_by_bot_id[bot_id]
+
+        has_twitch_options = 'twitchOptions' in bot
+        has_emojis = has_twitch_options and 'assignEmojis' in bot['twitchOptions']
+        has_emojis_assign = has_emojis and bot['twitchOptions']['assignEmojis'] is True
+
+        if  has_emojis_assign:
+            emoji = self.emoji_assigner.getEmojiForUser(chat_to_send['author'])
+            if emoji is not None:
+                message = emoji + " " + message
 
         self.send_twitch_messge(message, "#" + channel)
 
