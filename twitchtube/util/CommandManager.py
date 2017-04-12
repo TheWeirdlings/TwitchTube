@@ -1,16 +1,28 @@
+'''Process text to returns command actions'''
+from pymongo import MongoClient
 from bson.objectid import ObjectId
 
-class CommandManager(object):
-    def __init__(self, db, bot):
-        self.commands = db.commands.find({"botId": bot['_id']})
+import config
+MONGO = MongoClient(config.mongoUrl)
+DATABASE = MONGO[config.database]
 
-    def checkForCommands(self, message, username):
-        if(username == 'twitchtube'):
+class CommandManager(object):
+    '''Process text to returns command actions'''
+    def __init__(self):
+        self.command_cache = {}
+
+    def check_for_commands(self, message, username, bot_id):
+        '''Checks if messgage is a command'''
+
+        if bot_id not in self.command_cache:
+            self.command_cache[bot_id] = DATABASE.commands.find({"botId": ObjectId(bot_id)})
+
+        if username is 'twitchtube':
             return
 
-        for command in self.commands:
+        for command in self.command_cache[bot_id]:
             # @TODO: Can we just use a hash here?
-            if (command['command'] == message):
+            if command['command'] == message:
                 return command['message']
 
-        self.commands.rewind()
+        self.command_cache[bot_id].rewind()

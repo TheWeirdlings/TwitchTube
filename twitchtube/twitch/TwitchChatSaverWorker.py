@@ -27,7 +27,8 @@ class TwitchChatSaverWorker(object):
         self.bots_hashed_by_channel = {}
         self.bot = {} #bot
         self.database = {}
-        # self.command_manager = CommandManager(self.database, self.bot)
+        # @TODO: inject or someone have the need to change code here
+        self.command_manager = CommandManager()
         self.channel_offset = channel_offset
         self.max_channel = 50
         self.irc_socket = None
@@ -92,12 +93,12 @@ class TwitchChatSaverWorker(object):
         youtube_message = YoutubeMessageModel(username, message, bot)
         youtube_message.save()
 
-        # command_message = self.command_manager.checkForCommands(message, username)
-        # if command_message is None:
-        #     return
+        command_message = self.command_manager.check_for_commands(message, username, str(bot['_id']))
+        if command_message is None:
+            return
 
         # @TODO: Should we queue up a message instead?
-        # self.send_twitch_method(command_message, channel)
+        self.send_twitch_method(command_message, channel)
 
     def read_socket(self):
         '''Listens to messages coming from the irc socket'''

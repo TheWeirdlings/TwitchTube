@@ -140,5 +140,5 @@ class TwitchChatSenderWorker(object):
                 self.last_update_check = now
 
             self.send_message_from_queue()
-            # self.notifySubscribers()
+            self.notifySubscribers()
             sleep(1.5)
