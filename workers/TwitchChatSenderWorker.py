@@ -1,7 +1,7 @@
 import click
 
-from twitchtube.twitch.TwitchChatSenderWorker import TwitchChatSenderWorker
-from twitchtube.util.TimersManager import TimersManager
+from twitchtube import TwitchChatSenderWorker
+from twitchtube import TimersManager
 
 @click.command()
 @click.option('--offset', default='', help='The offset of the bot list.')

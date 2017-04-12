@@ -65,3 +65,7 @@ Server Set Up
 2. Install mongo
 3. Install nodejs https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-an-ubuntu-14-04-server
 4. Install pm2 - npm isntall -g pm2
+
+# Runnings tests
+ - pip install pytest
+ - pytest

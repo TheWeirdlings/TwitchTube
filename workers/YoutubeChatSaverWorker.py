@@ -1,6 +1,6 @@
 import click
 
-from twitchtube.youtube.YoutubeChatSaverWorker import YoutubeChatSaverWorker
+from twitchtube import YoutubeChatSaverWorker
 from helpers import get_authenticated_service
 from oauth2client.tools import argparser
 

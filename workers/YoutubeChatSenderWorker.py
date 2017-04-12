@@ -1,4 +1,4 @@
-from twitchtube.youtube.YoutubeChatSenderWorker import YoutubeChatSenderWorker
+from twitchtube import YoutubeChatSenderWorker
 from helpers import get_authenticated_service
 from oauth2client.tools import argparser
 
