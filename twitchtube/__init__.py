@@ -1,5 +1,6 @@
 from .twitch.TwitchChatSaverWorker import TwitchChatSaverWorker
 from .twitch.TwitchChatSenderWorker import TwitchChatSenderWorker
+from .twitch.FollowerManager import FollowerManager
 
 from .util.TimersManager import TimersManager
 
@@ -11,7 +12,7 @@ __all__ = [
     'TwitchChatSaverWorker', 'TwitchChatSenderWorker',
 
     # Util
-    'TimersManager',
+    'TimersManager', 'FollowerManager',
 
     #Youtube
     'YoutubeChatSaverWorker', 'YoutubeChatSenderWorker',

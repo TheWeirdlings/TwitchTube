@@ -37,7 +37,7 @@ class TwitchChatSenderWorker(object):
     def notifiy_subscribers(self):
         '''Notifies all subscribers to execute'''
         for subscriber in self.subscribers:
-            subscriber.execute()
+            subscriber.execute(self.bots)
 
     def send_twitch_messge(self, message, channel):
         '''Sends a message to the specified channel'''
@@ -140,5 +140,5 @@ class TwitchChatSenderWorker(object):
                 self.last_update_check = now
 
             self.send_message_from_queue()
-            self.notifySubscribers()
+            self.notifiy_subscribers()
             sleep(1.5)
