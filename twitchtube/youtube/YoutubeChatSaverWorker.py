@@ -19,10 +19,10 @@ class YoutubeChatSaverWorker(object):
         self.channel_offset = channel_offset
         self.max_channel = 50
         self.bots = []
-        self.botsToGrab = []
+        self.bots_to_watch = []
         self.bot_info = {}
         self.last_update_check = datetime.now(timezone.utc)
-        # self.command_manager = CommandManager(db, bot)
+        self.command_manager = CommandManager()
 
     def save(self, messages, bot):
         '''Saves a list of Youtube messages'''
@@ -56,13 +56,16 @@ class YoutubeChatSaverWorker(object):
 
                 last_synced_message_date = message_published_date
                 self.bot_info[bot_id]['last_synced_message_date'] = last_synced_message_date
-                self.redis.set(bot_id + "-lastSyncedMessageDate", last_synced_message_date.isoformat())
+                self.redis.set(bot_id + "-lastSyncedMessageDate", \
+                    last_synced_message_date.isoformat())
 
-                #Check commands
-                # command_message = self.command_manager.checkForCommands(messagecontent, username)
-                # if command_message is not None:
-                #     command_message_to_save = YoutubeMessageModel('', command_message, bot)
-                #     command_message_to_save.save()
+                #Check commands TODO: handled and queue in command manager
+                command_message = self.command_manager.check_for_commands( \
+                    messagecontent, \
+                    username, bot_id)
+                if command_message is not None:
+                    command_message_to_save = YoutubeMessageModel('', command_message, bot)
+                    command_message_to_save.save()
 
     def query_chat(self, bot):
         '''Queries chat for a given youtube channel'''
@@ -97,12 +100,12 @@ class YoutubeChatSaverWorker(object):
         begin_index = self.channel_offset * self.max_channel
         end_index = self.max_channel + (self.channel_offset * self.max_channel) - 1
         self.bots = self.redis.lrange('TwitchtubeBots', begin_index, end_index)
-        self.botsToGrab = []
+        self.bots_to_watch = []
 
         for bot in self.bots:
             bot_parsed = json.loads(bot.decode())
             if bot_parsed['active']:
-                self.botsToGrab.append(bot_parsed)
+                self.bots_to_watch.append(bot_parsed)
 
     def start(self):
         '''Starts the worker and keeps it running'''
@@ -116,7 +119,7 @@ class YoutubeChatSaverWorker(object):
                 self.get_bots()
                 self.last_update_check = now
 
-            for bot in self.botsToGrab:
+            for bot in self.bots_to_watch:
                 # Check if we are polling too soon
                 bot_id = str(bot['_id'])
                 if bot_id in self.bot_info and 'polling_interval_millis' in  self.bot_info[bot_id]:
