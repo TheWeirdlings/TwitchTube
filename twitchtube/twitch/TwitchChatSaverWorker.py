@@ -89,9 +89,11 @@ class TwitchChatSaverWorker(object):
 
         bot = self.bots_hashed_by_channel[channel]
 
+        # @TODO: abstract twitchtubebot to constant
         # @TODO: This should be queue up as any message not just youtube
-        youtube_message = YoutubeMessageModel(username, message, bot)
-        youtube_message.save()
+        if username != 'twitchtubebot':
+            youtube_message = YoutubeMessageModel(username, message, bot)
+            youtube_message.save()
 
         command_message = self.command_manager.check_for_commands(message, username, str(bot['_id']))
         if command_message is None:
