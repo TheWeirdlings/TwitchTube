@@ -31,7 +31,7 @@ class YoutubeChatSenderWorker(object):
     def notifiy_subscribers(self):
         '''Notifies all subscribers to execute'''
         for subscriber in self.subscribers:
-            subscriber.execute()
+            subscriber.execute(self.bots)
 
     def requeue_message(self, chat_to_send):
         '''Adds a message back to the queue'''
@@ -78,6 +78,6 @@ class YoutubeChatSenderWorker(object):
         '''Starts the worker and keeps it running'''
 
         while True:
-            # self.notifiy_subscribers()
+            self.notifiy_subscribers()
             self.send_next_message()
             sleep(1)

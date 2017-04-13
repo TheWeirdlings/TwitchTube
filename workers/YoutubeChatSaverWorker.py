@@ -1,6 +1,7 @@
 import click
 
 from twitchtube import YoutubeChatSaverWorker
+from twitchtube import TimersManager
 from helpers import get_authenticated_service
 from oauth2client.tools import argparser
 
@@ -14,6 +15,10 @@ def start_save(offset=0):
         offset = 0
     offset = int(offset)
     youtube_chat_saver = YoutubeChatSaverWorker(YOUTUBE, offset)
+
+    # timer_manager = TimersManager()
+    # youtube_chat_saver.register(timer_manager)
+
     youtube_chat_saver.start()
 
 if __name__ == "__main__":

@@ -23,8 +23,8 @@ def start_save(offset=0):
     follower_manager = FollowerManager(DATABASE, twitch)
     twitch_chat_saver.register(follower_manager)
 
-    # timer_manager = TimersManager()
-    # twitch_chat_saver.register(timer_manager)
+    timer_manager = TimersManager()
+    twitch_chat_saver.register(timer_manager)
 
     twitch_chat_saver.start()
 

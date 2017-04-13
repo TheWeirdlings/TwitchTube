@@ -23,6 +23,18 @@ class YoutubeChatSaverWorker(object):
         self.bot_info = {}
         self.last_update_check = datetime.now(timezone.utc)
         self.command_manager = CommandManager()
+        self.subscribers = []
+
+    # @TODO: Should be an interface
+    def register(self, subscriber):
+        '''Allows a subscriber to subscribe to this class'''
+        self.subscribers.append(subscriber)
+
+    # @TODO: Should be an interface
+    def notifiy_subscribers(self):
+        '''Notifies all subscribers to execute'''
+        for subscriber in self.subscribers:
+            subscriber.execute(self.bots)
 
     def save(self, messages, bot):
         '''Saves a list of Youtube messages'''
@@ -131,4 +143,6 @@ class YoutubeChatSaverWorker(object):
                         continue
 
                 self.query_chat(bot)
-                sleep(1)
+
+            self.notifiy_subscribers()
+            sleep(1)
