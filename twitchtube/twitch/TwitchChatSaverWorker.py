@@ -5,8 +5,8 @@ import socket
 from datetime import datetime, timezone
 import cgi
 import json
-import redis
 import threading
+import redis
 
 import config
 from twitchtube.util.MLStripper import strip_tags
@@ -95,7 +95,8 @@ class TwitchChatSaverWorker(object):
             youtube_message = YoutubeMessageModel(username, message, bot)
             youtube_message.save()
 
-        command_message = self.command_manager.check_for_commands(message, username, str(bot['_id']))
+        command_message = self.command_manager.check_for_commands(message, \
+            username, str(bot['_id']))
         if command_message is None:
             return
 
@@ -138,42 +139,50 @@ class TwitchChatSaverWorker(object):
         irc_send_string = "JOIN " + self.channels_string + " \r\n"
         self.irc_socket.send(irc_send_string.encode('utf-8'))
 
-    def get_channels(self):
+    # @TODO Move to separate class?
+    def get_channels(self, bots, bots_hashed_by_channel):
         '''Get all Twitch channels in redis queue'''
         begin_index = self.channel_offset * self.max_channel
         end_index = self.max_channel + (self.channel_offset * self.max_channel) - 1
-        self.bots = self.redis.lrange('TwitchtubeBots', begin_index, end_index)
+        bots = self.redis.lrange('TwitchtubeBots', begin_index, end_index)
 
         channels = []
-
-        for bot in self.bots:
+        print(bots, flush=True)
+        for bot in bots:
             bot_parsed = json.loads(bot.decode())
             channel = '#' + bot_parsed['twitch']
             bot_active = bot_parsed['active']
 
             # if we haven't joined the channel, add it
-            channel_doesnt_exist = bot_active and channel not in self.bots_hashed_by_channel
+            channel_doesnt_exist = bot_active and channel not in bots_hashed_by_channel
             if channel_doesnt_exist:
                 channels.append(channel)
-                self.bots_hashed_by_channel[channel] = bot_parsed
+                bots_hashed_by_channel[channel] = bot_parsed
 
             # Update full bot if we have already joined
-            channel_exists = channel in self.bots_hashed_by_channel
-            channel_became_active = channel_exists and self.bots_hashed_by_channel[channel]['active'] is False
+            channel_exists = channel in bots_hashed_by_channel
+            channel_became_active = channel_exists and \
+                bots_hashed_by_channel[channel]['active'] is False
             channel_became_active = channel_became_active and bot_active
             if channel_became_active:
-                self.bots_hashed_by_channel[channel]['active'] = bot_parsed 
+                bots_hashed_by_channel[channel]['active'] = bot_parsed
 
             # Channel became inactive
-            channel_became_inactive = channel_exists and self.bots_hashed_by_channel[channel]['active'] is True
+            channel_became_inactive = channel_exists and \
+                bots_hashed_by_channel[channel]['active'] is True
             channel_became_inactive = channel_became_inactive and bot_active is False
             if channel_became_inactive:
-                self.bots_hashed_by_channel[channel]['active'] = bot_parsed
+                bots_hashed_by_channel[channel]['active'] = bot_parsed
+
+            # @TODO: Add a check list for restart conditions
+            if bot_parsed['status'] == 'restart':
+                bots_hashed_by_channel[channel] = bot_parsed
 
         self.channels_string = ','.join(channels)
+
         return channels
 
-    def check_for_updates(self):
+    def check_for_updates(self, bots, bots_hashed_by_channel):
         '''A function to use a separate thread
         that checks for channel updates'''
         while True:
@@ -181,7 +190,7 @@ class TwitchChatSaverWorker(object):
             seconds_since_last_update = (now - self.last_update_check).total_seconds()
 
             if seconds_since_last_update >= 10:
-                channels = self.get_channels()
+                channels = self.get_channels(bots, bots_hashed_by_channel)
                 if len(channels) > 0:
                     self.channels.extend(channels)
                     self.motd = False
@@ -191,14 +200,13 @@ class TwitchChatSaverWorker(object):
     def start(self):
         '''Start the Worker'''
 
-        channels = self.get_channels()
+        channels = self.get_channels(self.bots, self.bots_hashed_by_channel)
         if len(channels) > 0:
             self.channels.extend(channels)
             self.connect_to_channels()
 
-        # @TODO: Add offset acceptor
-
-        thread = threading.Thread(target=self.check_for_updates, args=())
+        thread = threading.Thread(target=self.check_for_updates, \
+            args=(self.bots, self.bots_hashed_by_channel))
         thread.daemon = True
         thread.start()
 

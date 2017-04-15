@@ -6,3 +6,9 @@
   - Stops saving after stop from CLI
   - Starts saving after start from Web UI
   - Stops saving after stop from Web UI
+
+
+## Restart
+  - Bot settings should change
+  - New commands should be checked for
+  - New timers should work

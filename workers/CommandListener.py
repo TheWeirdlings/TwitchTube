@@ -40,7 +40,31 @@ def proccess_command(bot_id, action):
         REDIS.lset('TwitchtubeBots', list_index - 1, json.dumps(mongo_bot))
 
     # @TODO: We need to set a variable on the bot for restart to let the scripts know
-    # if action == 'start':
+    if action == 'restart':
+        mongo_bot = DB.twitchtubeBots.find_one({'_id': ObjectId(bot_id)})
+
+        if mongo_bot is None:
+            #@TODO: Log
+            return
+
+        cached_bot = REDIS.hget('TwitchtubeBotsById', bot_id)
+
+        mongo_bot['active'] = True
+        mongo_bot['_id'] = str(mongo_bot['_id'])
+
+        if cached_bot is None:
+            list_index = REDIS.lpush('TwitchtubeBots', json.dumps(mongo_bot))
+            mongo_bot['list_index'] = list_index
+            REDIS.hmset('TwitchtubeBotsById', {mongo_bot['_id']: json.dumps(mongo_bot)})
+            return
+
+        cached_bot = json.loads(cached_bot.decode())
+        list_index = cached_bot['list_index']
+        mongo_bot['active'] = True
+        mongo_bot['_id'] = str(mongo_bot['_id'])
+        mongo_bot['list_index'] = list_index
+        REDIS.hmset('TwitchtubeBotsById', {mongo_bot['_id']: json.dumps(mongo_bot)})
+        REDIS.lset('TwitchtubeBots', list_index - 1, json.dumps(mongo_bot))
 
     if action == 'stop':
         cached_bot = REDIS.hget('TwitchtubeBotsById', bot_id)
