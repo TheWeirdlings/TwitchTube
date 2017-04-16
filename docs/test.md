@@ -9,6 +9,15 @@
 
 
 ## Restart
-  - Bot settings should change
+  - Bot settings should change (All four bots should mark as updated)
   - New commands should be checked for
   - New timers should work
+  - Mark as running status after checklist
+
+
+## Start
+  - Twitchtube saver should work
+    - If bot was stopped at first, Saver should join channel
+  - Twitchtube sender should work
+  - Youtube saver should save
+  - Youtube sender should send

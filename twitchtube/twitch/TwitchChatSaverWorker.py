@@ -42,6 +42,7 @@ class TwitchChatSaverWorker(object):
 
     def parse_line(self, line):
         '''Parses a line from the IRC socket'''
+        print(line, flush=True)
         if "PING" in line:
             irc_pong = "PONG %s\r\n" % line[1]
             self.irc_socket.send(irc_pong.encode('utf-8'))
@@ -134,12 +135,12 @@ class TwitchChatSaverWorker(object):
 
         self.irc_socket = irc_socket
 
-    def connect_to_new_channels(self):
+     # @TODO Move to separate class?
+    def connect_to_new_channels(self, irc_socket):
         '''Uses existing socket to connect to IRC'''
         irc_send_string = "JOIN " + self.channels_string + " \r\n"
-        self.irc_socket.send(irc_send_string.encode('utf-8'))
+        irc_socket.send(irc_send_string.encode('utf-8'))
 
-    # @TODO Move to separate class?
     def get_channels(self, bots, bots_hashed_by_channel):
         '''Get all Twitch channels in redis queue'''
         begin_index = self.channel_offset * self.max_channel
@@ -147,7 +148,7 @@ class TwitchChatSaverWorker(object):
         bots = self.redis.lrange('TwitchtubeBots', begin_index, end_index)
 
         channels = []
-        print(bots, flush=True)
+
         for bot in bots:
             bot_parsed = json.loads(bot.decode())
             channel = '#' + bot_parsed['twitch']
@@ -182,19 +183,18 @@ class TwitchChatSaverWorker(object):
 
         return channels
 
-    def check_for_updates(self, bots, bots_hashed_by_channel):
+    def check_for_updates(self, bots, bots_hashed_by_channel, irc_socket, channels_global, message_of_day):
         '''A function to use a separate thread
         that checks for channel updates'''
         while True:
             now = datetime.now(timezone.utc)
             seconds_since_last_update = (now - self.last_update_check).total_seconds()
-
             if seconds_since_last_update >= 10:
                 channels = self.get_channels(bots, bots_hashed_by_channel)
                 if len(channels) > 0:
-                    self.channels.extend(channels)
-                    self.motd = False
-                    self.connect_to_new_channels()
+                    channels_global.extend(channels)
+                    message_of_day = False
+                    self.connect_to_new_channels(irc_socket)
                 self.last_update_check = now
 
     def start(self):
@@ -206,7 +206,7 @@ class TwitchChatSaverWorker(object):
             self.connect_to_channels()
 
         thread = threading.Thread(target=self.check_for_updates, \
-            args=(self.bots, self.bots_hashed_by_channel))
+            args=(self.bots, self.bots_hashed_by_channel, self.irc_socket, self.channels, self.motd))
         thread.daemon = True
         thread.start()
 
