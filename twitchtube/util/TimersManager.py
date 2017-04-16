@@ -4,6 +4,7 @@ import datetime
 import json
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+import redis
 
 from twitchtube.models.TwitchMessageModel import TwitchMessageModel
 from twitchtube.models.YoutubeMessageModel import YoutubeMessageModel
@@ -18,14 +19,13 @@ class TimersManager(object):
     def __init__(self):
         self.bot_timers = {}
         self.last_minute_checked = None
+        self.redis = redis.from_url(config.redisURL)
 
     def execute(self, bots):
         '''Execute when subscriber is called'''
-
         for bot in bots:
             loaded_bot = json.loads(bot.decode())
-            bot_id = str(loaded_bot['_id'])
-            self.create_timers(bot_id)
+            self.create_timers(loaded_bot)
             self.send_timers(loaded_bot)
 
     def send_timers(self, bot):
@@ -50,10 +50,23 @@ class TimersManager(object):
                     youtube_message = YoutubeMessageModel('', timerMessage, bot, False)
                     youtube_message.save()
 
-    def create_timers(self, bot_id):
+    def create_timers(self, bot):
         '''Sets up timers for a bot'''
-        if bot_id in self.bot_timers:
+        bot_id = str(bot['_id'])
+        reset_check = 'reset_check' in bot
+        reset_check_commands = reset_check and 'timers' in bot['reset_check'] \
+            and bot['reset_check']['timers'] is False
+        if bot_id in self.bot_timers and not reset_check_commands:
             return
+
+        if reset_check_commands:
+            # @TODO: this will reset for 10 seconds unfortunately
+            # because youtube checks for updates every 10 seconds
+            # We need a reactive pattern and notfiy rather than query
+            bot['reset_check']['timers'] = True
+            list_index = bot['list_index']
+            self.redis.hmset('TwitchtubeBotsById', {str(bot['_id']): json.dumps(bot)})
+            self.redis.lset('TwitchtubeBots', list_index - 1, json.dumps(bot))
 
         # @TODO: if bot marked for reset check again
         timers = DATABASE.timers.find({"botId": ObjectId(bot_id)})

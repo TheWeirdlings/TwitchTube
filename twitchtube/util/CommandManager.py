@@ -11,10 +11,10 @@ class CommandManager(object):
     def __init__(self):
         self.command_cache = {}
 
-    def check_for_commands(self, message, username, bot_id):
+    def check_for_commands(self, message, username, bot_id, update=False):
         '''Checks if messgage is a command'''
 
-        if bot_id not in self.command_cache:
+        if bot_id not in self.command_cache or update:
             self.command_cache[bot_id] = DATABASE.commands.find({"botId": ObjectId(bot_id)})
 
         if username is 'twitchtube':

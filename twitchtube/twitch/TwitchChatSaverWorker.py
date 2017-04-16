@@ -96,8 +96,20 @@ class TwitchChatSaverWorker(object):
             youtube_message = YoutubeMessageModel(username, message, bot)
             youtube_message.save()
 
+        update = False
+        reset_check = 'reset_check' in bot
+        reset_check_commands = reset_check and 'commands' in bot['reset_check'] \
+            and bot['reset_check']['commands'] is False
+        if bot['status'] == 'restart' and reset_check_commands:
+            update = True
+            bot['reset_check']['commands'] = True
+            self.bots_hashed_by_channel[channel]['reset_check']['commands'] = True
+            list_index = bot['list_index']
+            self.redis.hmset('TwitchtubeBotsById', {str(bot['_id']): json.dumps(bot)})
+            self.redis.lset('TwitchtubeBots', list_index - 1, json.dumps(bot))
+
         command_message = self.command_manager.check_for_commands(message, \
-            username, str(bot['_id']))
+            username, str(bot['_id']), update)
         if command_message is None:
             return
 
@@ -176,8 +188,16 @@ class TwitchChatSaverWorker(object):
                 bots_hashed_by_channel[channel]['active'] = bot_parsed
 
             # @TODO: Add a check list for restart conditions
-            if bot_parsed['status'] == 'restart':
+            # @TODO: Abstract to model
+            reset_check = 'reset_check' in bot_parsed
+            reset_twitchsaver = reset_check and 'twitchsaver' in bot_parsed['reset_check'] \
+                and bot_parsed['reset_check']['twitchsaver'] is False
+            if bot_parsed['status'] == 'restart' and reset_twitchsaver:
                 bots_hashed_by_channel[channel] = bot_parsed
+                bots_hashed_by_channel[channel]['reset_check']['twitchsaver'] = True
+                list_index = bot_parsed['list_index']
+                self.redis.hmset('TwitchtubeBotsById', {str(bot_parsed['_id']): json.dumps(bot_parsed)})
+                self.redis.lset('TwitchtubeBots', list_index - 1, json.dumps(bot_parsed))
 
         self.channels_string = ','.join(channels)
 

@@ -63,6 +63,13 @@ def proccess_command(bot_id, action):
         mongo_bot['active'] = True
         mongo_bot['_id'] = str(mongo_bot['_id'])
         mongo_bot['list_index'] = list_index
+
+        mongo_bot['reset_check'] = {
+            'twitchsaver': False,
+            'commands': False,
+            'timers': False,
+        }
+
         REDIS.hmset('TwitchtubeBotsById', {mongo_bot['_id']: json.dumps(mongo_bot)})
         REDIS.lset('TwitchtubeBots', list_index - 1, json.dumps(mongo_bot))
 

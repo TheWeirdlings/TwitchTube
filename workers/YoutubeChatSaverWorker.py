@@ -16,8 +16,8 @@ def start_save(offset=0):
     offset = int(offset)
     youtube_chat_saver = YoutubeChatSaverWorker(YOUTUBE, offset)
 
-    # timer_manager = TimersManager()
-    # youtube_chat_saver.register(timer_manager)
+    timer_manager = TimersManager()
+    youtube_chat_saver.register(timer_manager)
 
     youtube_chat_saver.start()
 
