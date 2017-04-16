@@ -1,9 +1,0 @@
-twitchtube/__init__.py
-twitchtube.egg-info/PKG-INFO
-twitchtube.egg-info/SOURCES.txt
-twitchtube.egg-info/dependency_links.txt
-twitchtube.egg-info/requires.txt
-twitchtube.egg-info/top_level.txt
-youtubelivestreaming/__init__.py
-youtubelivestreaming/live_broadcasts.py
-youtubelivestreaming/live_messages.py
