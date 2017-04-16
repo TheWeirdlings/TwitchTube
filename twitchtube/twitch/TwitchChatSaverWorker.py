@@ -3,6 +3,7 @@
 
 import socket
 from datetime import datetime, timezone
+from time import sleep
 import cgi
 import json
 import threading
@@ -42,7 +43,6 @@ class TwitchChatSaverWorker(object):
 
     def parse_line(self, line):
         '''Parses a line from the IRC socket'''
-        print(line, flush=True)
         if "PING" in line:
             irc_pong = "PONG %s\r\n" % line[1]
             self.irc_socket.send(irc_pong.encode('utf-8'))
@@ -216,6 +216,7 @@ class TwitchChatSaverWorker(object):
                     message_of_day = False
                     self.connect_to_new_channels(irc_socket)
                 self.last_update_check = now
+            sleep(1)
 
     def start(self):
         '''Start the Worker'''
