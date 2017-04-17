@@ -10,7 +10,7 @@ from oauth2client.file import Storage
 from oauth2client.tools import argparser, run_flow
 
 def get_authenticated_service(args):
-    CLIENT_SECRETS_FILE = "./client_secrets.json"
+    CLIENT_SECRETS_FILE = os.path.dirname(__file__) + "./client_secrets.json"
 
     YOUTUBE_READONLY_SCOPE = "https://www.googleapis.com/auth/youtube"
     YOUTUBE_API_SERVICE_NAME = "youtube"

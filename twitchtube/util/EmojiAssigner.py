@@ -3,7 +3,7 @@ import config
 r = redis.from_url(config.redisURL)
 
 class EmojiAssigner(object):
-    def __init__(self, bot):
+    def __init__(self):
         self.emojiIndex = 0
 
         # savedIndex = r.get('emojiIndex')

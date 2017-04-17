@@ -6,6 +6,7 @@ TwitchTube [twitchtube.io](http://twitchtube.io) is an open source streaming bot
 2. Commands
 3. Timers
 4. Self hosting
+5. Emoji Assignment to Users
 
 We add features every week, so feel free to open an issue request here or contact us on [twitchtube.io](http://twitchtube.io).
 
@@ -21,8 +22,9 @@ Clone
 
 Configure
 ---------------------
-1. ./scripts/config.sh
+1. Set Up a Python Virtual environment (@TODO: docs)
 2. pip install -r requirements.txt
+3. Intsall twitchtube `pip install -e .`
 
 Connect Youtube
 ---------------------
@@ -34,7 +36,7 @@ Connect Youtube
 6. Under application type select Other, then click create
 7. Download the Json file, and rename the file to client_secrets.json
 8. Copy the client_secrets.json to the root directory of twitchtube
-9. Now, when you first run init.py or generator.py you will need to add the --noauth_local_webserver flag.     Examples are below
+9. Now, when you first run any Youtube worker or generator.py you will need to add the --noauth_local_webserver flag.     Examples are below
 
 Connect Twitch
 ---------------------
@@ -49,15 +51,13 @@ Add a bot to your mongo database
 3. python generator.py --action=read --item=bot
 * (Copy the bot id)
 
-Run the script
+Run the Workers
 ---------------------
-python init.py --botId=[insert-bot-id] or python init.py --botId=[insert-bot-id] --noauth_local_webserver for your first run
-
-or
-
-pm2 start --name=ThehollidayInnBot init.py -- --botId=[bot-id]
-
-When restarting the bot, you will need to remove the pid file. Run the command rm tmp/[insert-bot-id].txt
+- python workers/TwitchChatSaverWorker.py
+- python workers/TwitchChatSenderWorker.py
+- python workers/YoutubeSaverWorker.py
+- python workers/YoutubeSenderWorker.py
+- python workers/CommandListener.py (if you want the UI commands)
 
 Server Set Up
 ---------------------
@@ -65,3 +65,8 @@ Server Set Up
 2. Install mongo
 3. Install nodejs https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-an-ubuntu-14-04-server
 4. Install pm2 - npm isntall -g pm2
+5. python commander.py --bot=[bot_id] --action=start
+
+# Runnings tests
+ - pip install pytest
+ - pytest

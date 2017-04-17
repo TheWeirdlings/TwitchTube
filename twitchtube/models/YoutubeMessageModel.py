@@ -1,48 +1,49 @@
+'''A model of a message to be queue from on channel
+    to Youtube'''
+
 import datetime
 import json
-
 import redis
-# r = redis.StrictRedis()
-
 import config
-r = redis.from_url(config.redisURL)
 
 class YoutubeMessageModel(object):
-    def __init__(self, author, text, bot, addFromTwitch = True):
-        twitchFromPrefix = "(From Twitch)"
+    '''A model of a message to be queue from on channel
+    to Youtube'''
+
+    def __init__(self, author, text, bot, add_from_twitch=True, useOnlyText=False):
+        self.redis = redis.from_url(config.redisURL)
+
+        twitch_from_prefix = "(From Twitch)"
 
         self.author = author
 
-        if ("options" in bot and "displayFromMessages" in bot['options'] and bot['options']['displayFromMessages'] == False):
-            addFromTwitch = False
+        options_exist = "options" in bot
+        if options_exist:
+            options = bot['options']
+        display_exist = options_exist and "displayFromMessages" in options
+        display_from_messages_disabled = display_exist and options['displayFromMessages'] is False
+
+        if display_from_messages_disabled:
+            add_from_twitch = False
 
         message = ""
-        if (addFromTwitch):
-            message = twitchFromPrefix + " "
+        if add_from_twitch:
+            message = twitch_from_prefix + " "
 
-        if (author):
+        if author and useOnlyText is not True:
             message = message + author + ": "
 
         self.message = message + text
-        self.bot = bot;
-        self.botId = self.bot['_id'];
 
-
-    def toMongoObject(self, bot):
-        # @TODO: Should we really pass the bot around this way?
-        mongoMessage = {
-            "bot_id": self.bot['_id'],
-            "message": self.message,
-            "sent": False,
-            "date": datetime.datetime.utcnow()
-        }
-        return mongoMessage
+        self.bot_id = bot['_id']
 
     def save(self):
+        '''Saves the model to the Redis Queue'''
+
         time = datetime.datetime.utcnow()
 
         chat = {
-            "bot_id": str(self.bot['_id']),
+            "bot_id": str(self.bot_id),
             "message": self.message,
             "sent": False,
             "author": self.author,
@@ -50,4 +51,4 @@ class YoutubeMessageModel(object):
             "fromService": "youtube",
         }
 
-        r.lpush("youtubeMessageToSync" + str(self.botId), json.dumps(chat))
+        self.redis.rpush("YoutubeMessageToSync", json.dumps(chat))
