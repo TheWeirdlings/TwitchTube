@@ -93,8 +93,10 @@ class YoutubeChatSaverWorker(object):
 
         next_page_token = self.bot_info[bot_id]['next_page_token']
 
-        response = live_messages.list_messages(self.youtube_auth, livechat_id, next_page_token)
-
+        try:
+            response = live_messages.list_messages(self.youtube_auth, livechat_id, next_page_token)
+        except:
+            return
         self.bot_info[bot_id]['next_page_token'] = response['nextPageToken']
 
         polling_interval_in_millis = response['pollingIntervalMillis']
@@ -103,7 +105,7 @@ class YoutubeChatSaverWorker(object):
         self.bot_info[bot_id]['last_polled_time'] = datetime.now(timezone.utc)
 
         messages = response.get("items", [])
-
+        print(messages, flush=True)
         self.save(messages, bot)
 
     def get_bots(self):

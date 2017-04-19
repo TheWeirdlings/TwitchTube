@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from time import sleep
 import json
 import socket
+import threading
 import redis
 
 import config
@@ -42,13 +43,18 @@ class TwitchChatSenderWorker(object):
     def send_twitch_messge(self, message, channel):
         '''Sends a message to the specified channel'''
         irc_message = 'PRIVMSG %s :%s\n' % (channel, message)
-        self.irc_socket.send(irc_message.encode('utf-8'))
+        try:
+            print(message, flush=True)
+            print(channel, flush=True)
+            self.irc_socket.send(irc_message.encode('utf-8'))
+            # readbuffer = socket.recv(1024).decode()
+            # print(readbuffer)
+        except:
+            print("Error", flush=True)
 
     def send_message_from_queue(self):
         '''Grabs next message on queue and sends it
         to the specified channel'''
-
-        # @TODO re append messages that are not used in this bot range
 
         chat_to_send = self.twitch_collection.get_next_message_to_send()
 
@@ -119,17 +125,43 @@ class TwitchChatSenderWorker(object):
 
         for bot in self.bots:
             cached_bot = json.loads(bot.decode())
-            if cached_bot['active']:
+            if cached_bot['active'] and 'twitch' in cached_bot:
                 self.channels.append(cached_bot['twitch'])
                 bot_id = str(cached_bot['_id'])
                 self.bots_by_bot_id[bot_id] = cached_bot
 
         self.channels_string = ','.join(self.channels)
 
+    def parse_line(self, line, socket):
+        '''Parses a line from the IRC socket'''
+        print(line, flush=True)
+        if "PING" in line:
+            irc_pong = "PONG %s\r\n" % line[1]
+            socket.send(irc_pong.encode('utf-8'))
+            return
+
+    def read_socket(self, socket):
+        '''Listens to messages coming from the irc socket'''
+        try:
+            self.readbuffer = self.readbuffer + socket.recv(1024).decode()
+        except:
+            return
+        temp = self.readbuffer.split("\n")
+        self.readbuffer = temp.pop()
+
+        for line in temp:
+            self.parse_line(line, socket)
+
     def start(self):
         '''Start the Worker'''
         self.get_channels()
         self.connect_to_channels()
+
+        # @TODO: abstract this, but we must keep the socket open
+        thread = threading.Thread(target=self.read_socket, \
+            args=(self.irc_socket,))
+        thread.daemon = True
+        thread.start()
 
         while True:
             now = datetime.now(timezone.utc)
@@ -141,4 +173,4 @@ class TwitchChatSenderWorker(object):
 
             self.send_message_from_queue()
             self.notifiy_subscribers()
-            sleep(1.5)
+            sleep(.2)

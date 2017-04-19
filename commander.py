@@ -29,7 +29,7 @@ def twitchtube(bot, action):
         mongo_bot['_id'] = str(mongo_bot['_id'])
 
         if cached_bot is None:
-            list_index = REDIS.lpush('TwitchtubeBots', json.dumps(mongo_bot))
+            list_index = REDIS.rpush('TwitchtubeBots', json.dumps(mongo_bot))
             mongo_bot['list_index'] = list_index
             REDIS.hmset('TwitchtubeBotsById', {mongo_bot['_id']: json.dumps(mongo_bot)})
             click.echo("Started!")

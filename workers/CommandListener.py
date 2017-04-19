@@ -13,6 +13,10 @@ DB = CLINET[config.database]
 
 def proccess_command(bot_id, action):
     '''Process command from Redis'''
+
+    print(bot_id, flush=True)
+    print(action, flush=True)
+
     if action == 'start':
         mongo_bot = DB.twitchtubeBots.find_one({'_id': ObjectId(bot_id)})
 
@@ -26,7 +30,8 @@ def proccess_command(bot_id, action):
         mongo_bot['_id'] = str(mongo_bot['_id'])
 
         if cached_bot is None:
-            list_index = REDIS.lpush('TwitchtubeBots', json.dumps(mongo_bot))
+            list_index = REDIS.rpush('TwitchtubeBots', json.dumps(mongo_bot))
+            print(list_index, flush=True)
             mongo_bot['list_index'] = list_index
             REDIS.hmset('TwitchtubeBotsById', {mongo_bot['_id']: json.dumps(mongo_bot)})
             return
@@ -53,7 +58,7 @@ def proccess_command(bot_id, action):
         mongo_bot['_id'] = str(mongo_bot['_id'])
 
         if cached_bot is None:
-            list_index = REDIS.lpush('TwitchtubeBots', json.dumps(mongo_bot))
+            list_index = REDIS.rpush('TwitchtubeBots', json.dumps(mongo_bot))
             mongo_bot['list_index'] = list_index
             REDIS.hmset('TwitchtubeBotsById', {mongo_bot['_id']: json.dumps(mongo_bot)})
             return
@@ -90,8 +95,8 @@ def listen():
     '''Listen to REDIS for bot commands'''
     while 1:
         queue = REDIS.lpop(REDIS_COMMAND_QUEUE)
-
         if queue is not None:
+            print(queue, flush=True)
             action = json.loads(queue.decode())
             bot_id = action['botId']
             action = action['status']
@@ -100,5 +105,4 @@ def listen():
         sleep(.5)
 
 if __name__ == '__main__':
-    listen() 
-
+    listen()
