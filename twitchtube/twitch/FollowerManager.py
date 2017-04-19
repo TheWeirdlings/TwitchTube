@@ -62,13 +62,17 @@ class FollowerManager(object):
 
     def check_followers(self, bot):
         '''Checks the Twitch api for new followers'''
-
+        if 'twitch' not in bot:
+            return
         bot_id = str(bot['_id'])
         twitch_channel = bot['twitch']
         follower_cursor = None
 
-        followers = self.twitch_api.getFollowers(twitch_channel, follower_cursor)
-        followers = json.loads(followers)
+        try:
+            followers = self.twitch_api.getFollowers(twitch_channel, follower_cursor)
+            followers = json.loads(followers)
+        except:
+            return
 
         for follower in followers['follows']:
             follower_date = parser.parse(follower['created_at'])

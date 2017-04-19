@@ -163,6 +163,8 @@ class TwitchChatSaverWorker(object):
 
         for bot in bots:
             bot_parsed = json.loads(bot.decode())
+            if 'twitch' not in bot_parsed:
+                continue
             channel = '#' + bot_parsed['twitch']
             bot_active = bot_parsed['active']
 

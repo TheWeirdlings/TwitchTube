@@ -9,3 +9,4 @@ venv/
 twitchtube/twitch/twitchConfig.py
 *.json
 config.py
+twitchtube.egg-info
