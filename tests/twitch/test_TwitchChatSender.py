@@ -5,7 +5,7 @@ import threading
 from bson.objectid import ObjectId
 from pymongo import MongoClient
 
-from twitchtube.twitch.TwitchChatSender import TwitchChatSender
+from twitchtube import TwitchChatSenderWorker
 from twitchtube.models.TwitchMessageCollection import TwitchMessageCollection
 from twitchtube.models.TwitchMessageModel import TwitchMessageModel
 
@@ -34,7 +34,7 @@ class TwitchChatSenderTestCase(unittest.TestCase):
     # @TODO: Move to a generator helper class for tests?
     def createMessage(self):
         # set up collection
-        twitchMessageCollection = TwitchMessageCollection(self.bot);
+        twitchMessageCollection = TwitchMessageCollection()
 
         # create message
         author = "test author"
