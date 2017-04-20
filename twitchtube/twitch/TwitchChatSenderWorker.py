@@ -70,6 +70,7 @@ class TwitchChatSenderWorker(object):
         bot_id = str(chat_to_send['bot_id'])
 
         # Put it back, should make this more effiecient
+        # @TODO: if it is not active, we should delete the message
         if bot_id not in self.bots_by_bot_id:
             author = chat_to_send['author']
             text = chat_to_send['message']
