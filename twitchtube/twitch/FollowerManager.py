@@ -33,7 +33,7 @@ class FollowerManager(object):
         '''Throttles to only check every minute'''
         now = datetime.datetime.now(pytz.UTC)
         current_minute = now.minute
-        return True
+
         if self.last_minute_checked is None or current_minute != self.last_minute_checked:
             self.last_minute_checked = current_minute
             return True
