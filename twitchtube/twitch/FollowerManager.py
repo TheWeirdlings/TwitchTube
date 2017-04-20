@@ -74,6 +74,9 @@ class FollowerManager(object):
         except:
             return
 
+        if 'follows' not in followers:
+            return
+
         for follower in followers['follows']:
             follower_date = parser.parse(follower['created_at'])
 
