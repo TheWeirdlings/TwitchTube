@@ -64,6 +64,8 @@ class YoutubeChatSaverWorker(object):
                     last_synced_message_date = parser.parse(redis_stored_sync_date)
 
             if last_synced_message_date < message_published_date:
+                 # @TODO: if we don't have a bot to sync, don't save
+
                 message_to_save.save()
 
                 last_synced_message_date = message_published_date
@@ -111,6 +113,7 @@ class YoutubeChatSaverWorker(object):
     def get_bots(self):
         '''Gets active bots from redis and creates a hash so we can access
         their live chat ids'''
+
         begin_index = self.channel_offset * self.max_channel
         end_index = self.max_channel + (self.channel_offset * self.max_channel) - 1
         self.bots = self.redis.lrange('TwitchtubeBots', begin_index, end_index)
