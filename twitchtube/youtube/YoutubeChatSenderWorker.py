@@ -72,7 +72,7 @@ class YoutubeChatSenderWorker(object):
         try:
             live_messages.insert_message(self.youtube_auth, livechat_id, chat_to_send['message'])
         except:
-            print("Unexpected error:" + sys.exc_info()[0], flush=True)
+            print("Unexpected error:" + str(sys.exc_info()[0]), flush=True)
 
     def start(self):
         '''Starts the worker and keeps it running'''
