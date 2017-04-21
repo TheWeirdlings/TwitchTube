@@ -63,7 +63,7 @@ class YoutubeChatSaverWorker(object):
                 last_synced_message_date = datetime.now(timezone.utc)
                 self.bot_info[bot_id]['last_synced_message_date'] = last_synced_message_date
                 # @TODO: Make this a hashed list instead
-                redis_stored_sync_date = self.redis.get(bot_id + "-lastSyncedMessageDate")
+                redis_stored_sync_date = self.redis.hget('LastSyncedMessageDate', str(bot_id))
                 if redis_stored_sync_date is not None:
                     last_synced_message_date = parser.parse(redis_stored_sync_date)
 
@@ -74,8 +74,8 @@ class YoutubeChatSaverWorker(object):
 
                 last_synced_message_date = message_published_date
                 self.bot_info[bot_id]['last_synced_message_date'] = last_synced_message_date
-                self.redis.set(bot_id + "-lastSyncedMessageDate", \
-                    last_synced_message_date.isoformat())
+                self.redis.hmset('LastSyncedMessageDate', {str(bot_id): \
+                    last_synced_message_date.isoformat()})
 
                 #Check commands TODO: handled and queue in command manager
                 command_message = self.command_manager.check_for_commands( \
