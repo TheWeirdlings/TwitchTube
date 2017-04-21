@@ -51,7 +51,7 @@ class TwitchChatSenderWorker(object):
             # readbuffer = socket.recv(1024).decode()
             # print(readbuffer)
         except:
-            print("Error", flush=True)
+            print("Unexpected error:" + str(sys.exc_info()[0]), flush=True)
 
     def send_message_from_queue(self):
         '''Grabs next message on queue and sends it
