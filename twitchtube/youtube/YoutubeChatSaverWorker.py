@@ -38,6 +38,10 @@ class YoutubeChatSaverWorker(object):
 
     def save(self, messages, bot):
         '''Saves a list of Youtube messages'''
+
+        if len(messages) > 0:
+            print(messages, flush=True)
+
         for message in messages:
             # Don't save chat sent from the bot - these are commands and timers
             # @TODO Abstract Author to constant
@@ -64,9 +68,9 @@ class YoutubeChatSaverWorker(object):
                     last_synced_message_date = parser.parse(redis_stored_sync_date)
 
             if last_synced_message_date < message_published_date:
-                 # @TODO: if we don't have a bot to sync, don't save
-
-                message_to_save.save()
+                # @TODO: if we don't have a bot to sync, don't save
+                if 'twitch' in bot:
+                    message_to_save.save()
 
                 last_synced_message_date = message_published_date
                 self.bot_info[bot_id]['last_synced_message_date'] = last_synced_message_date
@@ -107,7 +111,7 @@ class YoutubeChatSaverWorker(object):
         self.bot_info[bot_id]['last_polled_time'] = datetime.now(timezone.utc)
 
         messages = response.get("items", [])
-        print(messages, flush=True)
+
         self.save(messages, bot)
 
     def get_bots(self):

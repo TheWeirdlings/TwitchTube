@@ -92,7 +92,7 @@ class TwitchChatSaverWorker(object):
 
         # @TODO: abstract twitchtubebot to constant
         # @TODO: This should be queue up as any message not just youtube
-        if username != 'twitchtubebot':
+        if username != 'twitchtubebot' and 'youtube' in bot:
             youtube_message = YoutubeMessageModel(username, message, bot)
             youtube_message.save()
 
