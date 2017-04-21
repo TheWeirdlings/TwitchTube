@@ -1,6 +1,7 @@
 '''This class grabs and chats that are queued for twitch and
     send them to the twitch channel associated with the bot'''
 from datetime import datetime, timezone
+import pytz
 from time import sleep
 import json
 import socket
@@ -143,15 +144,31 @@ class TwitchChatSenderWorker(object):
 
     def read_socket(self, socket):
         '''Listens to messages coming from the irc socket'''
-        try:
-            self.readbuffer = self.readbuffer + socket.recv(1024).decode()
-        except:
-            return
-        temp = self.readbuffer.split("\n")
-        self.readbuffer = temp.pop()
+        now = datetime.now(pytz.UTC)
+        current_minute = now.minute
+        last_minute_sent = None
 
-        for line in temp:
-            self.parse_line(line, socket)
+        while 1:
+            now = datetime.now(pytz.UTC)
+            current_minute = now.minute
+
+            if current_minute != last_minute_sent:
+                last_minute_sent = current_minute
+                print("Pinging", flush=True)
+                # @TODO: for now we will ping thehollidayinn to keep the socket alive,
+                # for some reasons ping pong does not work
+                irc_message = 'PRIVMSG %s :%s\n' % ("#thehollidayinn", "Ping")
+                socket.send(irc_message.encode('utf-8'))
+
+        # try:
+        #     self.readbuffer = self.readbuffer + socket.recv(1024).decode()
+        # except:
+        #     return
+        # temp = self.readbuffer.split("\n")
+        # self.readbuffer = temp.pop()
+        #
+        # for line in temp:
+        #     self.parse_line(line, socket)
 
     def start(self):
         '''Start the Worker'''
