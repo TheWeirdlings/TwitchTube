@@ -1,70 +1,58 @@
+'''Tests for Twitch Message Model'''
 import unittest
 import json
-from bson.objectid import ObjectId
 
 from twitchtube.models.TwitchMessageModel import TwitchMessageModel
 
 import redis
 import config
-r = redis.from_url(config.redisURL)
+REDIS = redis.from_url(config.redisURL)
 
 class TwitchMessageModelTestCase(unittest.TestCase):
-    """Tests for ``."""
-
-    def test_toMongoObject(self):
-        twitchFromPrefix = "(From YouTube)"
-        testId = ObjectId()
+    '''Tests for Twitch Message Model'''
+    def test_save(self):
+        '''Test that twitch message is saved to redis'''
+        twitch_from_prefix = "(From YouTube)"
+        test_id = 1234
         author = "test author"
         message = "test message"
 
-        bot = {'_id': testId}
-
-        twitchMessageFromTwitch = TwitchMessageModel(author, message, testId, bot)
-        mongoObject = twitchMessageFromTwitch.toMongoObject()
-
-        self.assertEqual(mongoObject['bot_id'], testId)
-        self.assertEqual(mongoObject['message'], twitchFromPrefix + " " + author + ": " + message)
-        self.assertEqual(mongoObject['sent'], False)
-        self.assertTrue(mongoObject['date'])
-
-    def test_shouldSaveToRedis(self):
-        twitchFromPrefix = "(From YouTube)"
-        testId = 1234
-        author = "test author"
-        message = "test message"
-
-        bot = {'_id': testId}
+        bot = {'_id': test_id}
 
         model = TwitchMessageModel(author, message, "youtube-id", bot)
         model.save()
 
-        messageSaved = r.lpop("twtichMessageToSync" + str(testId))
-        messageSaved = json.loads(messageSaved.decode())
+        message_saved = REDIS.rpop("TwitchMessageToSync")
+        message_saved = json.loads(message_saved.decode())
 
-        self.assertEqual(messageSaved['bot_id'], str(testId))
-        self.assertEqual(messageSaved['message'], twitchFromPrefix + " " + author + ": " + message)
-        self.assertEqual(messageSaved['sent'], False)
-        self.assertTrue(messageSaved['date'])
+        generated_message = twitch_from_prefix + " " + author + ": " + message
 
-    def test_shouldSaveWithoutPrefixWhenBotHasOptionDisabled(self):
-        testId = 1234
+        self.assertEqual(message_saved['bot_id'], str(test_id))
+        self.assertEqual(message_saved['message'], generated_message)
+        self.assertEqual(message_saved['sent'], False)
+        self.assertTrue(message_saved['date'])
+
+    def test_save_without_prefix(self):
+        '''Test that a twitch message is saved without the
+        youtube prefix'''
+        test_id = 1234
         author = "test author"
         message = "test message"
 
         bot = {
-            '_id': testId,
+            '_id': test_id,
             'options': {
-                    'displayFromMessages': False
+                'displayFromMessages': False
                 }
             }
 
         model = TwitchMessageModel(author, message, "youtube-id", bot)
         model.save()
 
-        messageSaved = r.lpop("twtichMessageToSync" + str(testId))
-        messageSaved = json.loads(messageSaved.decode())
+        message_saved = REDIS.rpop("TwitchMessageToSync")
+        message_saved = json.loads(message_saved.decode())
 
-        self.assertEqual(messageSaved['bot_id'], str(testId))
-        self.assertEqual(messageSaved['message'], author + ": " + message)
-        self.assertEqual(messageSaved['sent'], False)
-        self.assertTrue(messageSaved['date'])
+        self.assertEqual(message_saved['bot_id'], str(test_id))
+        self.assertEqual(message_saved['message'], author + ": " + message)
+        self.assertEqual(message_saved['sent'], False)
+        self.assertTrue(message_saved['date'])
