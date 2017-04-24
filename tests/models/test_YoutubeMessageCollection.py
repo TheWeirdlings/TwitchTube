@@ -1,69 +1,30 @@
+"""Tests for YoutubeMessageCollection."""
 import unittest
-from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 from twitchtube.models.YoutubeMessageCollection import YoutubeMessageCollection
 from twitchtube.models.YoutubeMessageModel import YoutubeMessageModel
 
-# @TODO: Move somwehre else?
-import config
-client = MongoClient(config.mongoUrl)
-db = client[config.database]
-mongoYTChat = db.youtubeMessages
-
 class YoutubeMessageCollectionTestCase(unittest.TestCase):
-    """Tests for ``."""
-
+    """Tests for YoutubeMessageCollection."""
     def setUp(self):
         # set up fake bot
-        twitchFromPrefix = "(From Twitch)"
-        testId = 1234
-        self.bot = {'_id': testId}
+        self.test_id = ObjectId()
+        self.bot = {'_id': self.test_id}
 
-    def tearDown(self):
-        mongoYTChat.delete_many({})
+    def test_get_next_message_to_send(self):
+        '''Test getting the next message off the queue'''
+        author = 'author'
+        text = 'text'
+        youtube_id = 'youtube_id'
 
-    def createYoutubeMessage(self):
-        # set up collection
-        youtubeMessageCollection = YoutubeMessageCollection(self.bot);
-
-        # create message
-        author = "test author"
-        message = "test message"
-        youTubeMessageFromTwitch = YoutubeMessageModel(author, message)
-        mongoObject = youTubeMessageFromTwitch.toMongoObject(self.bot)
-
-        # save the message to mongo
-        # @TODO: save to test database
-        youtubeMessageCollection.saveChat(mongoObject)
-
-
-    def test_getNextMessageToSend(self):
         # create a message that is ready to send
-        self.createYoutubeMessage()
+        twitch_message = YoutubeMessageModel(author, text, self.bot)
+        twitch_message.save()
 
         # use the collection to get the message
-        youtubeMessageCollection = YoutubeMessageCollection(self.bot);
-        getNextMessageToSend = youtubeMessageCollection.getNextMessageToSend()
+        youtube_message_collection = YoutubeMessageCollection()
+        next_message = youtube_message_collection.get_next_message_to_send()
 
         # test that it exists
-        self.assertTrue(getNextMessageToSend)
-
-    def test_markSent(self):
-        # create a message that is ready to send
-        self.createYoutubeMessage()
-
-        # use the collection to get the message
-        youtubeMessageCollection = YoutubeMessageCollection(self.bot);
-        getNextMessageToSend = youtubeMessageCollection.getNextMessageToSend()
-
-        # test that it exists
-        self.assertTrue(getNextMessageToSend)
-
-        # mark the message as sent
-        youtubeMessageCollection.markSent()
-
-        # test try to get the message again
-        getNextMessageToSendAgain = youtubeMessageCollection.getNextMessageToSend()
-
-        # test it does not exist
-        self.assertFalse(getNextMessageToSendAgain)
+        self.assertTrue(next_message)

@@ -1,12 +1,12 @@
+"""Tests for TwitchMessageCollection."""
 import unittest
-from pymongo import MongoClient
 from bson.objectid import ObjectId
 
 from twitchtube.models.TwitchMessageCollection import TwitchMessageCollection
 from twitchtube.models.TwitchMessageModel import TwitchMessageModel
 
 class TwitchMessageCollectionTestCase(unittest.TestCase):
-    """Tests for ``."""
+    """Tests for TwitchMessageCollection."""
 
     def setUp(self):
         # set up fake bot
