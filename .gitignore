@@ -11,3 +11,5 @@ twitchtube/twitch/twitchConfig.py
 config.py
 twitchtube.egg-info
 .cache
+htmlcov
+.coverage

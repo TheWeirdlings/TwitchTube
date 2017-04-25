@@ -70,3 +70,4 @@ Server Set Up
 # Runnings tests
  - pip install pytest
  - pytest
+ - pytest --cov-report html --cov=twitchtube tests/
