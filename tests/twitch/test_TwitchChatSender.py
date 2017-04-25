@@ -1,6 +1,6 @@
+"""Tests for TwitchChatSender."""
 import unittest
 from unittest.mock import MagicMock
-import socket
 import threading
 from bson.objectid import ObjectId
 from pymongo import MongoClient
@@ -9,60 +9,56 @@ from twitchtube import TwitchChatSenderWorker
 from twitchtube.models.TwitchMessageCollection import TwitchMessageCollection
 from twitchtube.models.TwitchMessageModel import TwitchMessageModel
 
-# @TODO: Move somwehre else?
-import config
-client = MongoClient(config.mongoUrl)
-db = client[config.database]
-mongoChat = db.twitchMessages
+class RandomSub(object):
+    def execute(self):
+        pass
 
 class TwitchChatSenderTestCase(unittest.TestCase):
-    """Tests for ``."""
+    """Tests for TwitchChatSender."""
 
     def setUp(self):
         # set up fake bot
-        twitchFromPrefix = "(From Twitch)"
-        testId = ObjectId()
+        test_id = ObjectId()
         self.channel = 'channel'
         self.bot = {
-            '_id': testId,
+            '_id': test_id,
             'twitch': self.channel,
             }
 
-    def tearDown(self):
-        mongoChat.delete_many({})
+    def test_notifiy_subscribers(self):
+        '''Tests the notify subscribers'''
+        sub = RandomSub()
+        sub.execute = MagicMock()
 
-    # @TODO: Move to a generator helper class for tests?
-    def createMessage(self):
-        # set up collection
-        twitchMessageCollection = TwitchMessageCollection()
+        twitch_sender = TwitchChatSenderWorker()
+        twitch_sender.register(sub)
+        twitch_sender.notifiy_subscribers()
 
-        # create message
-        author = "test author"
-        message = "test message"
-        youtubeId = 1234
-        message = TwitchMessageModel(author, message, youtubeId, self.bot['_id'])
-        mongoObject = message.toMongoObject()
+        self.assertTrue(sub.execute.called)
 
-        # save the message to mongo
-        # @TODO: save to test database
-        twitchMessageCollection.saveChat(mongoObject)
+    def test_send_twitch_messge(self):
+        '''Tests send twitch message'''
+        socket_mock = MagicMock()
+        socket_mock.send = MagicMock(return_value=True)
 
-        return message
+        channel = 'example-channel'
+        message = 'example-message'
+        twitch_sender = TwitchChatSenderWorker()
+        twitch_sender.send_twitch_messge(channel, message)
 
-    def test_sendTwitchMessge(self):
-        messageModel = self.createMessage()
+        socket_mock.send.assert_called_with("PRIVMSG " + "#" + channel + " :" + message + "\r\n")
 
-        # socketMock = socket.socket()
-        socketMock = MagicMock()
-        socketMock.send = MagicMock(return_value=True)
+    def test_send_message_from_queue(self):
+        pass
 
-        run_event = threading.Event()
-        run_event.is_set = MagicMock(return_value=True)
-
-        twitchChatSender = TwitchChatSender(socketMock, run_event, self.bot)
-        twitchChatSender.sendMessageFromQueue();
-
-        sentChatMessage = mongoChat.find_one()
-
-        self.assertTrue(sentChatMessage['sent'])
-        socketMock.send.assert_called_with("PRIVMSG " + "#" + self.channel + " :" + messageModel.getMessage() + "\r\n")
+    def test_connect_to_channels(self):
+        pass
+    
+    def test_get_channels(self):
+        pass
+    
+    def test_parse_line(self):
+        pass
+    
+    def test_read_socket(self):
+        pass

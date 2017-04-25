@@ -30,7 +30,7 @@ class UserActionsManager(object):
             viewers = json.loads(viewers)
             if 'chatters' in viewers and 'viewers' in viewers['chatters']:
                 self.scoreViewers(viewers['chatters']['viewers'])
-                print viewers['chatters']['viewers']
+                print(viewers['chatters']['viewers'])
 
     def scoreViewers(self, viewers):
         for viewer in viewers:

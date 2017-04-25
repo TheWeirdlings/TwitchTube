@@ -1,11 +1,12 @@
 '''This class grabs and chats that are queued for twitch and
     send them to the twitch channel associated with the bot'''
 from datetime import datetime, timezone
-import pytz
 from time import sleep
 import json
 import socket
 import threading
+import sys
+import pytz
 import redis
 
 import config
