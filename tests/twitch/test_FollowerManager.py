@@ -1,32 +1,39 @@
+"""Tests for FollowerManager."""
 import unittest
 from unittest.mock import MagicMock
 from bson.objectid import ObjectId
 import json
 import datetime
+import pytz
 
 from twitchtube.twitch.FollowerManager import FollowerManager
 from TwitchPythonApi.twitch_api import TwitchApi
 
 import redis
 import config
-r = redis.from_url(config.redisURL)
+REDIS = redis.from_url(config.redisURL)
+
+import config
+from pymongo import MongoClient
+MONGO = MongoClient(config.mongoUrl)
+DATABASE = MONGO[config.database]
 
 class FollowerManagerTestCase(unittest.TestCase):
-    """Tests for ``."""
-
+    """Tests for FollowerManager."""
     def setUp(self):
         self.channel = 'channel'
-        self.testId = ObjectId()
-        self.twitchAlertText = 'Yo'
+        self.test_id = ObjectId()
+        self.twitch_alert_text = 'Yo'
         self.bot = {
-            '_id': self.testId,
+            '_id': str(self.test_id),
             'twitch': self.channel,
             'twitchOptions': {
-                    'displayTwitchAlerts': True,
-                    'twitchAlertText': self.twitchAlertText,
+                'displayTwitchAlerts': True,
+                'twitchAlertText': self.twitch_alert_text,
                 }
             }
-        self.twitchFollowerResponse = """
+        self.bot_encoded = json.dumps(self.bot).encode()
+        self.twitch_follower_response = """
             {
               "_total": 1234,
               "_links": {
@@ -59,75 +66,88 @@ class FollowerManagerTestCase(unittest.TestCase):
             }
             """
 
-    # def tearDown(self):
-    #     mongoChat.delete_many({})
+    def test_sends_message_about_new_follower(self):
+        '''Tests that a message is sent when a new user
+        follows'''
+        twitch_api = TwitchApi()
 
-    def test_sendsMessageAboutNewFollower(self):
-        twitchApi = TwitchApi()
+        follower_time = datetime.datetime.now(pytz.UTC)
+        follower_time = follower_time + datetime.timedelta(0, 10)
 
-        followerTime = datetime.datetime.now()
-        followerTime = followerTime + datetime.timedelta(0,10)
-
-        twitchFollowerResponse = self.twitchFollowerResponse.replace("[createdDate]", followerTime.isoformat())
-        twitchApi.getFollowers = MagicMock(return_value=twitchFollowerResponse)
-
-        followerManager = FollowerManager(self.bot, None, twitchApi)
-        followerManager.exectute()
-
-        messageSaved = r.lpop("twtichMessageToSync" + str(self.testId))
-        messageSaved = json.loads(messageSaved.decode())
-
-        self.assertEqual(messageSaved['message'], ": " + self.twitchAlertText)
-
-    def test_doesNotSendMessageWhenFollowerIsBeforeNow(self):
-        twitchApi = TwitchApi()
-
-        followerTime = datetime.datetime.now()
-        followerTime = followerTime + datetime.timedelta(0, -10)
-
-        twitchFollowerResponse = self.twitchFollowerResponse.replace("[createdDate]", followerTime.isoformat())
-        twitchApi.getFollowers = MagicMock(return_value=twitchFollowerResponse)
-
-        followerManager = FollowerManager(self.bot, None, twitchApi)
-        followerManager.exectute()
-
-        messageSaved = r.lpop("twtichMessageToSync" + str(self.testId))
-
-        self.assertFalse(messageSaved)
-
-    def test_doesNotSendMessageWhenBotHasFollowMessageDisabled(self):
-        twitchApi = TwitchApi()
-
-        followerTime = datetime.datetime.now()
-        followerTime = followerTime + datetime.timedelta(0, 10)
-
-        twitchFollowerResponse = self.twitchFollowerResponse.replace("[createdDate]", followerTime.isoformat())
-        twitchApi.getFollowers = MagicMock(return_value=twitchFollowerResponse)
-
-        self.bot['twitchOptions']['displayTwitchAlerts'] = False
-
-        followerManager = FollowerManager(self.bot, None, twitchApi)
-        followerManager.exectute()
-
-        messageSaved = r.lpop("twtichMessageToSync" + str(self.testId))
-
-        self.assertFalse(messageSaved)
-
-    def test_sendsThankYouMessageToFollower(self):
-        twitchApi = TwitchApi()
-
-        followerTime = datetime.datetime.now()
-        followerTime = followerTime + datetime.timedelta(0,10)
-
-        twitchFollowerResponse = self.twitchFollowerResponse.replace("[createdDate]", followerTime.isoformat())
-        twitchApi.getFollowers = MagicMock(return_value=twitchFollowerResponse)
+        twitch_follower_response = self.twitch_follower_response.replace("[createdDate]", \
+          follower_time.isoformat())
+        twitch_api.getFollowers = MagicMock(return_value=twitch_follower_response)
 
         self.bot['twitchOptions']['thankNewFollowers'] = True
+        self.bot_encoded = json.dumps(self.bot).encode()
 
-        followerManager = FollowerManager(self.bot, None, twitchApi)
-        followerManager.exectute()
+        follower_manager = FollowerManager(DATABASE, twitch_api)
+        follower_manager.execute([self.bot_encoded])
 
-        messageSaved = r.lpop("twtichMessageToSync" + str(self.testId))
-        messageSaved = json.loads(messageSaved.decode())
+        message_saved = REDIS.rpop("TwitchMessageToSync")
+        # Two pops because we have the thank you message
+        message_saved = REDIS.rpop("TwitchMessageToSync")
+        message_saved = json.loads(message_saved.decode())
 
-        self.assertEqual(messageSaved['message'], ": Thanks for following, @test_user2!")
+        self.assertEqual(message_saved['message'], ": " + self.twitch_alert_text)
+
+    def test_doesNotSendMessageWhenFollowerIsBeforeNow(self):
+        REDIS.ltrim("TwitchMessageToSync", 0, 0)
+        twitch_api = TwitchApi()
+
+        follower_time = datetime.datetime.now(pytz.UTC)
+        follower_time = follower_time + datetime.timedelta(0, -10)
+
+        twitch_follower_response = self.twitch_follower_response.replace("[createdDate]", \
+          follower_time.isoformat())
+        twitch_api.getFollowers = MagicMock(return_value=twitch_follower_response)
+
+        follower_manager = FollowerManager(DATABASE, twitch_api)
+        follower_manager.execute([self.bot_encoded])
+
+        message_saved = REDIS.rpop("TwitchMessageToSync")
+
+        self.assertFalse(message_saved)
+
+    def test_doesNotSendMessageWhenBotHasFollowMessageDisabled(self):
+        REDIS.ltrim("TwitchMessageToSync", 0, 0)
+        twitch_api = TwitchApi()
+
+        follower_time = datetime.datetime.now(pytz.UTC)
+        follower_time = follower_time + datetime.timedelta(0, 10)
+
+        twitch_follower_response = self.twitch_follower_response.replace("[createdDate]", \
+          follower_time.isoformat())
+        twitch_api.getFollowers = MagicMock(return_value=twitch_follower_response)
+
+        self.bot['twitchOptions']['displayTwitchAlerts'] = False
+        self.bot_encoded = json.dumps(self.bot).encode()
+
+        follower_manager = FollowerManager(DATABASE, twitch_api)
+        follower_manager.execute([self.bot_encoded])
+
+        message_saved = REDIS.rpop("TwitchMessageToSync")
+
+        self.assertFalse(message_saved)
+
+    def test_sendsThankYouMessageToFollower(self):
+        twitch_api = TwitchApi()
+
+        follower_time = datetime.datetime.now(pytz.UTC)
+        follower_time = follower_time + datetime.timedelta(0, 10)
+
+        twitch_follower_response = self.twitch_follower_response.replace("[createdDate]", \
+          follower_time.isoformat())
+        twitch_api.getFollowers = MagicMock(return_value=twitch_follower_response)
+
+        self.bot['twitchOptions']['thankNewFollowers'] = True
+        self.bot_encoded = json.dumps(self.bot).encode()
+
+        follower_manager = FollowerManager(DATABASE, twitch_api)
+        follower_manager.execute([self.bot_encoded])
+
+        message_saved = REDIS.rpop("TwitchMessageToSync")
+        REDIS.rpop("TwitchMessageToSync")
+        message_saved = json.loads(message_saved.decode())
+
+        self.assertEqual(message_saved['message'], ": Thanks for following, @test_user2!")

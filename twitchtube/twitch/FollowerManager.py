@@ -33,7 +33,7 @@ class FollowerManager(object):
         '''Throttles to only check every minute'''
         now = datetime.datetime.now(pytz.UTC)
         current_minute = now.minute
-        return True
+
         if self.last_minute_checked is None or current_minute != self.last_minute_checked:
             self.last_minute_checked = current_minute
             return True
@@ -82,7 +82,7 @@ class FollowerManager(object):
 
             if follower_date > self.last_time_follower_alerted(bot_id):
                 follower_display_name = follower['user']['display_name']
-
+                print(follower_date)
                 new_follower_message = bot['twitchOptions']['twitchAlertText']
                 new_follower_message = new_follower_message.replace("{{userId}}", \
                     follower_display_name)
@@ -96,6 +96,7 @@ class FollowerManager(object):
                 if thank_new_followers:
                     thankfollower_message = 'Thanks for following, @' \
                         + follower['user']['display_name'] + '!'
+                    print(thankfollower_message)
                     message_to_save = TwitchMessageModel('', thankfollower_message, \
                         None, bot, False)
                     message_to_save.save()
