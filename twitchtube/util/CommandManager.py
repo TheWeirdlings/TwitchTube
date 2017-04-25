@@ -2,20 +2,24 @@
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 
+# @TODO: inject db
 import config
 MONGO = MongoClient(config.mongoUrl)
 DATABASE = MONGO[config.database]
 
 class CommandManager(object):
     '''Process text to returns command actions'''
-    def __init__(self):
+    def __init__(self, db=None):
         self.command_cache = {}
+        self.database = DATABASE
+        if db is not None:
+            self.database = db
 
     def check_for_commands(self, message, username, bot_id, update=False):
         '''Checks if messgage is a command'''
 
         if bot_id not in self.command_cache or update:
-            self.command_cache[bot_id] = DATABASE.commands.find({"botId": ObjectId(bot_id)})
+            self.command_cache[bot_id] = self.database.commands.find({"botId": ObjectId(bot_id)})
 
         if username is 'twitchtube':
             return

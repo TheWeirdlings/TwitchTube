@@ -1,6 +1,7 @@
 mongoUrl = 'mongodb://localhost:27017/'
 
 database = 'twitchtubebots-dev'
+database_test = 'twitchtube_test'
 rabbitQueue = 'twitchtubebots-dev'
 reddisBotCommandQueue = 'twitchtube-bot-queue'
 
