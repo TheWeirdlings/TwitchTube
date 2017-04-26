@@ -19,18 +19,39 @@ class CommandManagerTestCase(unittest.TestCase):
         '''Checks to ensure a message is returned
         if a comamnd is sent'''
 
-        message = '!command'
+        command = '!command'
         command_response = 'my response'
         username = 'example-username'
         bot_id = ObjectId()
 
         DATABASE.commands.insert({
             'botId': bot_id,
-            'command': message,
+            'command': command,
             'message': command_response
         })
 
         command_manager = CommandManager(DATABASE)
-        message = command_manager.check_for_commands(message, username, str(bot_id))
+        message = command_manager.check_for_commands(command, username, str(bot_id))
+
+        self.assertEqual(message, command_response)
+
+    def test_returns_message_for_alias(self):
+        '''Returns a message for a command alias'''
+
+        command = '!command'
+        alias = '!alia'
+        command_response = 'my response'
+        username = 'example-username'
+        bot_id = ObjectId()
+
+        DATABASE.commands.insert({
+            'botId': bot_id,
+            'command': command,
+            'message': command_response,
+            'alias': [alias]
+        })
+
+        command_manager = CommandManager(DATABASE)
+        message = command_manager.check_for_commands(alias, username, str(bot_id))
 
         self.assertEqual(message, command_response)

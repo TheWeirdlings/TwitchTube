@@ -15,6 +15,11 @@ class CommandManager(object):
         if db is not None:
             self.database = db
 
+    def command_is_alias(self, command_from_db, message):
+        '''Check if message is an alias'''
+        alias_prop = 'alias' in command_from_db
+        return alias_prop and message in command_from_db['alias']
+
     def check_for_commands(self, message, username, bot_id, update=False):
         '''Checks if messgage is a command'''
 
@@ -26,7 +31,7 @@ class CommandManager(object):
 
         for command in self.command_cache[bot_id]:
             # @TODO: Can we just use a hash here?
-            if command['command'] == message:
+            if command['command'] == message or self.command_is_alias(command, message):
                 return command['message']
 
         self.command_cache[bot_id].rewind()
