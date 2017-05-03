@@ -76,7 +76,7 @@ class TimersManager(object):
             "botId": ObjectId(bot_id),
             "$or": [
                 {"platform": {"$exists": False}},
-                {"platform": self.platform
+                {"platform": self.platform},
                 {"platform": "all"},
             ]
         })
