@@ -55,3 +55,47 @@ class CommandManagerTestCase(unittest.TestCase):
         message = command_manager.check_for_commands(alias, username, str(bot_id))
 
         self.assertEqual(message, command_response)
+
+    def test_erturns_none_with_incorrect_platform(self):
+        '''Ensures that the command manager
+        fitlers comamnds by platform if specified'''
+
+        command = '!command'
+        command_response = 'my response'
+        username = 'example-username'
+        platform = 'twitch'
+        bot_id = ObjectId()
+
+        DATABASE.commands.insert({
+            'botId': bot_id,
+            'command': command,
+            'message': command_response,
+            'platform': 'youtube'
+        })
+
+        command_manager = CommandManager(DATABASE, platform)
+        message = command_manager.check_for_commands(command, username, str(bot_id))
+
+        self.assertEqual(message, None)
+
+    def test_uses_platform_specific_commands(self):
+        '''Ensures that the command manager
+        fitlers comamnds by platform if specified'''
+
+        command = '!command'
+        command_response = 'my response'
+        username = 'example-username'
+        platform = 'twitch'
+        bot_id = ObjectId()
+
+        DATABASE.commands.insert({
+            'botId': bot_id,
+            'command': command,
+            'message': command_response,
+            'platform': 'twitch'
+        })
+
+        command_manager = CommandManager(DATABASE, platform)
+        message = command_manager.check_for_commands(command, username, str(bot_id))
+
+        self.assertEqual(message, command_response)

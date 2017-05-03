@@ -22,7 +22,7 @@ class YoutubeChatSaverWorker(object):
         self.bots_to_watch = []
         self.bot_info = {}
         self.last_update_check = datetime.now(timezone.utc)
-        self.command_manager = CommandManager()
+        self.command_manager = CommandManager(platform='youtube')
         self.subscribers = []
 
     # @TODO: Should be an interface

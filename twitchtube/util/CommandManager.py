@@ -9,9 +9,10 @@ DATABASE = MONGO[config.database]
 
 class CommandManager(object):
     '''Process text to returns command actions'''
-    def __init__(self, db=None):
+    def __init__(self, db=None, platform=None):
         self.command_cache = {}
         self.database = DATABASE
+        self.platform = platform
         if db is not None:
             self.database = db
 
@@ -24,7 +25,15 @@ class CommandManager(object):
         '''Checks if messgage is a command'''
 
         if bot_id not in self.command_cache or update:
-            self.command_cache[bot_id] = self.database.commands.find({"botId": ObjectId(bot_id)})
+            query = {
+                "botId": ObjectId(bot_id),
+                "$or": [
+                    {"platform": {"$exists": False}},
+                    {"platform": self.platform},
+                    {"platform": "all"},
+                ],
+            }
+            self.command_cache[bot_id] = self.database.commands.find(query)
 
         if username is 'twitchtube':
             return
