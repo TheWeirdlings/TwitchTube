@@ -16,10 +16,11 @@ DATABASE = MONGO[config.database]
 class TimersManager(object):
     '''Creates timed messages that will be
     sent at intervals to the bot'''
-    def __init__(self):
+    def __init__(self, platform=None):
         self.bot_timers = {}
         self.last_minute_checked = None
         self.redis = redis.from_url(config.redisURL)
+        self.platform = platform
 
     def execute(self, bots):
         '''Execute when subscriber is called'''
@@ -43,12 +44,14 @@ class TimersManager(object):
                 for timerMessage in self.bot_timers[bot_id][current_minute]:
                     # @TODO: We need some generic way to send to all chat streams
                     # @TODO: remove from youtube here, since this is from us
-                    twitch_message = TwitchMessageModel('', timerMessage, None, bot, False)
-                    twitch_message.save()
+                    if self.platform == 'twitch' or self.platform is None:
+                        twitch_message = TwitchMessageModel('', timerMessage, None, bot, False)
+                        twitch_message.save()
 
-                    # @TODO Abstract Author to constant
-                    youtube_message = YoutubeMessageModel('', timerMessage, bot, False)
-                    youtube_message.save()
+                    if self.platform == 'youtube' or self.platform is None:
+                        # @TODO Abstract Author to constant
+                        youtube_message = YoutubeMessageModel('', timerMessage, bot, False)
+                        youtube_message.save()
 
     def create_timers(self, bot):
         '''Sets up timers for a bot'''
@@ -69,7 +72,14 @@ class TimersManager(object):
             self.redis.lset('TwitchtubeBots', list_index - 1, json.dumps(bot))
 
         # @TODO: if bot marked for reset check again
-        timers = DATABASE.timers.find({"botId": ObjectId(bot_id)})
+        timers = DATABASE.timers.find({
+            "botId": ObjectId(bot_id),
+            "$or": [
+                {"platform": {"$exists": False}},
+                {"platform": self.platform
+                {"platform": "all"},
+            ]
+        })
         #Timers are in the seciton because we need a program that polls the time
         computed_timers = {}
 

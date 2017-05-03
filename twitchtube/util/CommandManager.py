@@ -28,8 +28,9 @@ class CommandManager(object):
             query = {
                 "botId": ObjectId(bot_id),
                 "$or": [
-                    {"platform": {"exists": False}},
+                    {"platform": {"$exists": False}},
                     {"platform": self.platform},
+                    {"platform": "all"},
                 ],
             }
             self.command_cache[bot_id] = self.database.commands.find(query)

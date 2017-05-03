@@ -29,7 +29,7 @@ class TwitchChatSaverWorker(object):
         self.bot = {} #bot
         self.database = {}
         # @TODO: inject or someone have the need to change code here
-        self.command_manager = CommandManager(platform='youtube')
+        self.command_manager = CommandManager(platform='twitch')
         self.channel_offset = channel_offset
         self.max_channel = 50
         self.irc_socket = None
