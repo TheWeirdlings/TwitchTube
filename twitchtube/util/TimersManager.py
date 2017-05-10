@@ -1,6 +1,6 @@
 '''Creates timed messages that will be
     sent at intervals to the bot'''
-import datetime
+from datetime import datetime
 import json
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -22,6 +22,11 @@ class TimersManager(object):
         self.redis = redis.from_url(config.redisURL)
         self.platform = platform
 
+    def get_current_minute(self):
+        now = datetime.now()
+        current_minute = now.minute
+        return current_minute
+
     def execute(self, bots):
         '''Execute when subscriber is called'''
         for bot in bots:
@@ -32,8 +37,7 @@ class TimersManager(object):
     def send_timers(self, bot):
         '''Checks for a timed message and
         returns the message if it is time'''
-        now = datetime.datetime.now()
-        current_minute = now.minute
+        current_minute = self.get_current_minute()
         bot_id = str(bot['_id'])
 
         if current_minute != self.last_minute_checked:
@@ -47,7 +51,6 @@ class TimersManager(object):
                     if self.platform == 'twitch' or self.platform is None:
                         twitch_message = TwitchMessageModel('', timerMessage, None, bot, False)
                         twitch_message.save()
-
                     if self.platform == 'youtube' or self.platform is None:
                         # @TODO Abstract Author to constant
                         youtube_message = YoutubeMessageModel('', timerMessage, bot, False)
@@ -82,13 +85,11 @@ class TimersManager(object):
         })
         #Timers are in the seciton because we need a program that polls the time
         computed_timers = {}
-
         for timer in timers:
             base_interval = int(timer['interval'])
             interval = base_interval
-
             while interval <= 60:
-                if interval not in timers:
+                if interval not in computed_timers:
                     computed_timers[interval] = []
                 computed_timers[interval].append(timer['message'])
                 interval += base_interval
