@@ -22,7 +22,7 @@ class TimersManager(object):
         self.redis = redis.from_url(config.redisURL)
         self.platform = platform
 
-    def get_current_minute():
+    def get_current_minute(self):
         now = datetime.now()
         current_minute = now.minute
         return current_minute
@@ -51,7 +51,6 @@ class TimersManager(object):
                     if self.platform == 'twitch' or self.platform is None:
                         twitch_message = TwitchMessageModel('', timerMessage, None, bot, False)
                         twitch_message.save()
-
                     if self.platform == 'youtube' or self.platform is None:
                         # @TODO Abstract Author to constant
                         youtube_message = YoutubeMessageModel('', timerMessage, bot, False)
@@ -86,13 +85,11 @@ class TimersManager(object):
         })
         #Timers are in the seciton because we need a program that polls the time
         computed_timers = {}
-
         for timer in timers:
             base_interval = int(timer['interval'])
             interval = base_interval
-
             while interval <= 60:
-                if interval not in timers:
+                if interval not in computed_timers:
                     computed_timers[interval] = []
                 computed_timers[interval].append(timer['message'])
                 interval += base_interval
