@@ -71,3 +71,6 @@ Server Set Up
  - pip install pytest
  - pytest
  - pytest --cov-report html --cov=twitchtube tests/
+
+# Updating sup modules
+ - git submodule foreach git pull origin master
