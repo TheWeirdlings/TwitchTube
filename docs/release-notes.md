@@ -1,3 +1,5 @@
+# June 2 2017
+ - Add twitch online/offline monitor
 # May 9 2017
  - Fixed issue with multiple timers
 # May 5 2017
