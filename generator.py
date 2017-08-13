@@ -9,7 +9,7 @@ import config
 client = MongoClient(config.mongoUrl)
 db = client[config.database]
 
-from helpers import get_authenticated_service
+from workers.helpers import get_authenticated_service
 from youtubelivestreaming.live_broadcasts import get_live_broadcasts
 
 from oauth2client.tools import argparser, run_flow
