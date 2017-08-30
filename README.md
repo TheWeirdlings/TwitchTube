@@ -22,9 +22,15 @@ Clone
 
 Configure
 ---------------------
-1. Set Up a Python Virtual environment (@TODO: docs)
-2. pip install -r requirements.txt
-3. Intsall twitchtube `pip install -e .`
+1. pip install virtualenv
+2. mkdir twitchtube-env
+3. virtualenv twitchtube-env
+4. cd twitchtube-env
+5. source Scripts/activate
+6. git clone https://github.com/[username]/TwitchTube.git
+7. cd Twitchtube
+8. Install twitchtube `pip install -e .`
+9. cp config.py.example config.py
 
 Connect Youtube
 ---------------------
@@ -47,7 +53,7 @@ Connect Twitch
 Add a bot to your mongo database
 ---------------------
 1. Start mongo with the mongod command
-2. python generator.py --action=create --item=bot or python generator.py --action=create --item=bot --noauth_local_webserver for your first run
+2. `python generator.py --action=create --item=bot` or `python generator.py --action=create --item=bot --noauth_local_webserver` for your first run
 3. python generator.py --action=read --item=bot
 * (Copy the bot id)
 
